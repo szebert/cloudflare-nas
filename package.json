@@ -1,0 +1,16 @@
+{
+  "name": "cloudflare-nas",
+  "description": "Classic directory listing for Cloudflare R2 Storage",
+  "scripts": {
+    "dev": "wrangler dev --remote",
+    "deploy": "wrangler deploy",
+    "generate-types": "wrangler types"
+  },
+  "dependencies": {
+    "hono": "^4.10.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wrangler": "^4.51.0"
+  }
+}

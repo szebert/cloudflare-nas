@@ -1,0 +1,28 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-nas",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-17",
+  "vars": {
+    "AUTH_USERNAME": "admin"
+  },
+  "r2_buckets": [
+    {
+      "binding": "r2-explorer",
+      "bucket_name": "r2-explorer",
+      "preview_bucket_name": "r2-explorer"
+    },
+    {
+      "binding": "r2-bucket",
+      "bucket_name": "r2-bucket",
+      "preview_bucket_name": "r2-bucket"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}
