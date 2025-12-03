@@ -76,8 +76,9 @@ export function renderNewMenu(): string {
         <a href="#new-folder" class="popup-item">
           📁 New Folder
         </a>
-        <a href="#upload-files" class="popup-item disabled" title="Coming soon">
-          📤 Upload Files</a>
+        <a href="#upload-files" class="popup-item">
+          📤 Upload Files
+        </a>
         <a href="#upload-folder" class="popup-item disabled" title="Coming soon">
           📂 Upload Folder
         </a>

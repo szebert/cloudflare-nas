@@ -172,6 +172,27 @@ ${entries
       </form>
     </div>
   </div>
+
+  <!-- Upload Files Modal -->
+  <div id="upload-files" class="modal-overlay">
+    <div class="modal">
+      <h2>📤 Upload Files</h2>
+      <form class="modal-form" method="POST" action="/b/${
+        currentBucket.binding
+      }/upload" enctype="multipart/form-data">
+        <input type="hidden" name="path" value="${path}">
+        <input type="hidden" name="theme" value="${theme}">
+        <div class="file-input-wrapper">
+          <input type="file" name="files" multiple required>
+          <p class="file-hint">Select one or more files to upload</p>
+        </div>
+        <div class="modal-buttons">
+          <a href="${currentUrl}?theme=${theme}" class="btn-cancel">Cancel</a>
+          <button type="submit" class="btn-primary">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>`;
 }

@@ -9,11 +9,13 @@ A lightweight, self-hosted file browser for Cloudflare R2 storage buckets. Brows
   - Basic Authentication
   - Self-hosted on your Cloudflare account
 
-- **📁 File Browsing**
+- **📁 File Management**
 
   - Directory listing with sortable columns (name, modified, size)
   - Multi-bucket support with easy switching
-  - Folder creation
+  - Create new files with content
+  - Create folders
+  - Upload files (multiple at once)
   - File downloads
 
 - **🎨 Theming**
@@ -22,7 +24,6 @@ A lightweight, self-hosted file browser for Cloudflare R2 storage buckets. Brows
 
 ## Roadmap
 
-- [ ] File uploads (drag-and-drop)
 - [ ] Multi-part upload for large files
 - [ ] File preview (images, PDF, text, markdown)
 - [ ] Rename & delete operations

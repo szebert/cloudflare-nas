@@ -110,6 +110,25 @@ export function getThemeStyles(theme: Theme): string {
     .modal-wide {
       min-width: 450px;
     }
+    .file-input-wrapper {
+      padding: 16px;
+      border: 2px dashed currentColor;
+      border-radius: 8px;
+      text-align: center;
+      opacity: 0.7;
+    }
+    .file-input-wrapper:focus-within {
+      opacity: 1;
+    }
+    .file-input-wrapper input[type="file"] {
+      width: 100%;
+      cursor: pointer;
+    }
+    .file-hint {
+      margin: 8px 0 0 0;
+      font-size: 12px;
+      opacity: 0.7;
+    }
     .modal-buttons {
       display: flex;
       justify-content: flex-end;
