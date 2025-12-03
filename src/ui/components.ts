@@ -70,7 +70,7 @@ export function renderNewMenu(): string {
         ➕ New ▾
       </button>
       <div class="popup-menu">
-        <a href="#new-file" class="popup-item disabled" title="Coming soon">
+        <a href="#new-file" class="popup-item">
           📄 New File
         </a>
         <a href="#new-folder" class="popup-item">

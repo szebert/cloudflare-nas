@@ -95,11 +95,20 @@ export function getThemeStyles(theme: Theme): string {
       flex-direction: column;
       gap: 12px;
     }
-    .modal-form input[type="text"] {
+    .modal-form input[type="text"],
+    .modal-form textarea {
       padding: 8px 12px;
       font-size: 14px;
       border-radius: 4px;
       width: 100%;
+    }
+    .modal-form textarea {
+      resize: vertical;
+      font-family: monospace;
+      min-height: 100px;
+    }
+    .modal-wide {
+      min-width: 450px;
     }
     .modal-buttons {
       display: flex;
@@ -167,7 +176,8 @@ export function getThemeStyles(theme: Theme): string {
       padding-right: 0;
     }
     td.name a {
-      display: block;
+      display: inline-block;
+      max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
     }
@@ -340,14 +350,13 @@ export function getThemeStyles(theme: Theme): string {
       .popup-menu {
         min-width: 120px;
       }
-      .actions-popup {
-        right: 0;
-        left: auto;
-      }
       .modal {
         min-width: auto;
         width: 90vw;
         padding: 16px;
+      }
+      .modal-wide {
+        min-width: auto;
       }
     }
   `;
@@ -397,7 +406,8 @@ export function getThemeStyles(theme: Theme): string {
       background: #fff;
       border: 1px solid #ddd;
     }
-    .modal-form input[type="text"] {
+    .modal-form input[type="text"],
+    .modal-form textarea {
       border: 1px solid #ccc;
       background: #fff;
       color: #000;
@@ -489,7 +499,8 @@ export function getThemeStyles(theme: Theme): string {
       background: #2a2a2a;
       border: 1px solid #444;
     }
-    .modal-form input[type="text"] {
+    .modal-form input[type="text"],
+    .modal-form textarea {
       border: 1px solid #555;
       background: #1a1a1a;
       color: #e0e0e0;

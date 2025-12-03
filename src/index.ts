@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { basicAuth } from "hono/basic-auth";
 import { browseRoute } from "./routes/browse";
 import { downloadRoute } from "./routes/download";
+import { createFileRoute } from "./routes/file";
 import { createFolderRoute } from "./routes/folder";
 import type { BucketInfo } from "./types";
 import { discoverBuckets } from "./utils/buckets";
@@ -59,6 +60,9 @@ app.get("/b/:bucket/download/*", downloadRoute);
 
 // Create folder
 app.post("/b/:bucket/folder", createFolderRoute);
+
+// Create file
+app.post("/b/:bucket/file", createFileRoute);
 
 // Browse bucket directories
 app.get("/b/:bucket/*", browseRoute);

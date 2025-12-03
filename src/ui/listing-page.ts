@@ -96,7 +96,7 @@ export function renderListing(options: ListingOptions): string {
     <tbody>
 ${
   parentPath !== null
-    ? `      <tr>
+    ? `<tr>
         <td class="name"><a href="/b/${currentBucket.binding}/${parentPath}?theme=${theme}">📁 ..</a></td>
         <td class="modified">-</td>
         <td class="size">-</td>
@@ -153,6 +153,25 @@ ${entries
       </form>
     </div>
   </div>
+
+  <!-- New File Modal -->
+  <div id="new-file" class="modal-overlay">
+    <div class="modal modal-wide">
+      <h2>📄 New File</h2>
+      <form class="modal-form" method="POST" action="/b/${
+        currentBucket.binding
+      }/file">
+        <input type="hidden" name="path" value="${path}">
+        <input type="hidden" name="theme" value="${theme}">
+        <input type="text" name="name" placeholder="filename.txt" required autofocus>
+        <textarea name="content" placeholder="File content (optional)" rows="8"></textarea>
+        <div class="modal-buttons">
+          <a href="${currentUrl}?theme=${theme}" class="btn-cancel">Cancel</a>
+          <button type="submit" class="btn-primary">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>`;
 }
@@ -171,22 +190,23 @@ function renderRow(
   const displayName = entry.isDirectory ? `${entry.name}/` : entry.name;
 
   const actionsMenu = `
-        <div class="actions-menu">
-          <button class="actions-btn" type="button">⋮</button>
-          <div class="actions-popup">
-            <button type="button">Rename</button>
-            <button type="button">Update Metadata</button>
-            <button type="button">Get Sharable Link</button>
-            <button type="button" class="danger">Delete</button>
-          </div>
-        </div>`;
+  <div class="actions-menu">
+    <button class="actions-btn" type="button">⋮</button>
+    <div class="actions-popup">
+      <button type="button">Rename</button>
+      <button type="button">Update Metadata</button>
+      <button type="button">Get Sharable Link</button>
+      <button type="button" class="danger">Delete</button>
+    </div>
+  </div>`;
 
-  return `      <tr>
-        <td class="name"><a href="${href}">${icon} ${displayName}</a></td>
-        <td class="modified">${formatDate(entry.modified)}</td>
-        <td class="size">${
-          entry.isDirectory ? "-" : formatSizeShort(entry.size)
-        }</td>
-        <td class="actions">${actionsMenu}</td>
-      </tr>`;
+  return `
+  <tr>
+    <td class="name"><a href="${href}">${icon} ${displayName}</a></td>
+    <td class="modified">${formatDate(entry.modified)}</td>
+    <td class="size">${
+      entry.isDirectory ? "-" : formatSizeShort(entry.size)
+    }</td>
+    <td class="actions">${actionsMenu}</td>
+  </tr>`;
 }
