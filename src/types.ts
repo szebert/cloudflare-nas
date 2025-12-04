@@ -1,5 +1,5 @@
 export type Theme = "light" | "dark" | "system";
-export type SortField = "name" | "modified" | "size";
+export type SortField = "name" | "type" | "modified" | "size";
 export type SortOrder = "asc" | "desc";
 
 export interface FileEntry {
@@ -7,6 +7,7 @@ export interface FileEntry {
   isDirectory: boolean;
   size: number;
   modified: Date | null;
+  contentType: string | null;
 }
 
 export interface BucketInfo {

@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { basicAuth } from "hono/basic-auth";
+import { actionsHandlerRoute, actionsPageRoute } from "./routes/actions";
 import { browseRoute } from "./routes/browse";
 import { downloadRoute } from "./routes/download";
 import { createFileRoute } from "./routes/file";
@@ -67,6 +68,10 @@ app.post("/b/:bucket/file", createFileRoute);
 
 // Upload files
 app.post("/b/:bucket/upload", uploadFilesRoute);
+
+// Actions page for file/folder (rename, delete, etc.) - must be before browse routes
+app.get("/b/:bucket/actions/*", actionsPageRoute);
+app.post("/b/:bucket/actions/*", actionsHandlerRoute);
 
 // Browse bucket directories
 app.get("/b/:bucket/*", browseRoute);

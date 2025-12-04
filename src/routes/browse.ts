@@ -87,6 +87,7 @@ async function listDirectory(
   const listed = await bucket.list({
     prefix: prefix || undefined,
     delimiter: "/",
+    include: ["httpMetadata"],
   });
 
   // Add directories (common prefixes)
@@ -99,6 +100,7 @@ async function listDirectory(
         isDirectory: true,
         size: 0,
         modified: null,
+        contentType: null,
       });
     }
   }
@@ -114,6 +116,7 @@ async function listDirectory(
       isDirectory: false,
       size: object.size,
       modified: object.uploaded,
+      contentType: object.httpMetadata?.contentType || null,
     });
   }
 
@@ -134,6 +137,13 @@ function sortEntries(
     switch (field) {
       case "name":
         comparison = a.name.localeCompare(b.name, undefined, {
+          sensitivity: "base",
+        });
+        break;
+      case "type":
+        const aType = a.contentType || "";
+        const bType = b.contentType || "";
+        comparison = aType.localeCompare(bType, undefined, {
           sensitivity: "base",
         });
         break;

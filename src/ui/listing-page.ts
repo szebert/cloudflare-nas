@@ -1,10 +1,11 @@
 import type { BucketInfo, FileEntry, ListingOptions, Theme } from "../types";
 import {
   buildSortUrl,
-  formatDate,
+  formatDateUTC,
+  formatDateUTCDateOnly,
   formatSize,
-  formatSizeShort,
   getFilePath,
+  getFileType,
   getParentPath,
   getSortIndicator,
 } from "../utils/format";
@@ -70,6 +71,14 @@ export function renderListing(options: ListingOptions): string {
           sortField,
           sortOrder
         )}">Name${getSortIndicator("name", sortField, sortOrder)}</a></th>
+        <th class="type"><a href="${buildSortUrl(
+          currentBucket,
+          path,
+          theme,
+          "type",
+          sortField,
+          sortOrder
+        )}">Type${getSortIndicator("type", sortField, sortOrder)}</a></th>
         <th class="modified"><a href="${buildSortUrl(
           currentBucket,
           path,
@@ -98,6 +107,7 @@ ${
   parentPath !== null
     ? `<tr>
         <td class="name"><a href="/b/${currentBucket.binding}/${parentPath}?theme=${theme}">📁 ..</a></td>
+        <td class="type">-</td>
         <td class="modified">-</td>
         <td class="size">-</td>
         <td class="actions"></td>
@@ -209,25 +219,27 @@ function renderRow(
     ? `/b/${bucket.binding}/${filePath}/?theme=${theme}`
     : `/b/${bucket.binding}/download/${filePath}`;
   const displayName = entry.isDirectory ? `${entry.name}/` : entry.name;
+  const actionsUrl = `/b/${bucket.binding}/actions/${filePath}${
+    entry.isDirectory ? "/" : ""
+  }?theme=${theme}`;
 
-  const actionsMenu = `
-  <div class="actions-menu">
-    <button class="actions-btn" type="button">⋮</button>
-    <div class="actions-popup">
-      <button type="button">Rename</button>
-      <button type="button">Update Metadata</button>
-      <button type="button">Get Sharable Link</button>
-      <button type="button" class="danger">Delete</button>
-    </div>
-  </div>`;
+  const actionsLink = `<a href="${actionsUrl}" class="actions-link" title="Actions">⋮</a>`;
+  const typeDisplay = entry.isDirectory
+    ? "Folder"
+    : getFileType(entry.contentType);
+  const isoString = formatDateUTC(entry.modified);
+  const dateOnly = formatDateUTCDateOnly(entry.modified);
+  let modifiedCell = "-";
+  if (entry.modified && isoString !== "-") {
+    modifiedCell = `<span class="date-display"><span class="date-iso">${isoString}</span><span class="date-only">${dateOnly}</span></span>`;
+  }
 
   return `
   <tr>
     <td class="name"><a href="${href}">${icon} ${displayName}</a></td>
-    <td class="modified">${formatDate(entry.modified)}</td>
-    <td class="size">${
-      entry.isDirectory ? "-" : formatSizeShort(entry.size)
-    }</td>
-    <td class="actions">${actionsMenu}</td>
+    <td class="type">${typeDisplay}</td>
+    <td class="modified">${modifiedCell}</td>
+    <td class="size">${entry.isDirectory ? "-" : formatSize(entry.size)}</td>
+    <td class="actions">${actionsLink}</td>
   </tr>`;
 }
