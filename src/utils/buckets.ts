@@ -2,7 +2,6 @@ import type { BucketInfo } from "../types";
 
 /**
  * Dynamically discover R2 buckets from the environment
- * Uses duck-typing to identify R2Bucket bindings
  */
 export function discoverBuckets(env: Env): BucketInfo[] {
   const buckets: BucketInfo[] = [];
@@ -21,22 +20,12 @@ export function discoverBuckets(env: Env): BucketInfo[] {
 }
 
 /**
- * Duck-type check if a value is an R2Bucket
- * R2Bucket has get, put, delete, list, head methods
+ * Type guard to check if a value is an R2Bucket
  */
 function isR2Bucket(value: unknown): value is R2Bucket {
   if (!value || typeof value !== "object") return false;
 
-  const obj = value as Record<string, unknown>;
-
-  // Check for R2Bucket-specific methods
-  return (
-    typeof obj.get === "function" &&
-    typeof obj.put === "function" &&
-    typeof obj.delete === "function" &&
-    typeof obj.list === "function" &&
-    typeof obj.head === "function"
-  );
+  return value.constructor.name === "R2Bucket";
 }
 
 /**
