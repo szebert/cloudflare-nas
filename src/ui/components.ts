@@ -3,21 +3,29 @@ import type { BucketInfo, Theme } from "../types";
 export function renderThemeSwitcher(
   bucket: BucketInfo,
   path: string,
-  currentTheme: Theme
+  currentTheme: Theme,
+  options?: { isDetailsPage?: boolean; isDirectory?: boolean }
 ): string {
   const themes: { value: Theme; emoji: string; label: string }[] = [
     { value: "system", emoji: "🌓", label: "Auto" },
     { value: "light", emoji: "☀️", label: "Light" },
     { value: "dark", emoji: "🌙", label: "Dark" },
   ];
-  const basePath = path
-    ? `/b/${bucket.binding}/${path}`
-    : `/b/${bucket.binding}/`;
+
+  const isDetailsPage = options?.isDetailsPage ?? false;
+  const isDirectory = options?.isDirectory ?? false;
+
+  let basePath: string;
+  if (isDetailsPage) {
+    basePath = `/b/${bucket.binding}/details/${path}${isDirectory ? "/" : ""}`;
+  } else {
+    basePath = path ? `/b/${bucket.binding}/${path}` : `/b/${bucket.binding}/`;
+  }
 
   const currentEmoji =
     themes.find((t) => t.value === currentTheme)?.emoji || "🌓";
 
-  const options = themes
+  const themeOptions = themes
     .map((t) => {
       const isCurrent = t.value === currentTheme;
       const className = isCurrent ? "popup-item current" : "popup-item";
@@ -31,7 +39,7 @@ export function renderThemeSwitcher(
         ${currentEmoji} Theme ▾
       </button>
       <div class="popup-menu">
-        ${options}
+        ${themeOptions}
       </div>
     </div>`;
 }

@@ -99,7 +99,7 @@ export function renderListing(options: ListingOptions): string {
           sortField,
           sortOrder
         )}">Size${getSortIndicator("size", sortField, sortOrder)}</a></th>
-        <th class="actions"></th>
+        <th class="details"></th>
       </tr>
     </thead>
     <tbody>
@@ -110,7 +110,7 @@ ${
         <td class="type">-</td>
         <td class="modified">-</td>
         <td class="size">-</td>
-        <td class="actions"></td>
+        <td class="details"></td>
       </tr>`
     : ""
 }
@@ -219,11 +219,11 @@ function renderRow(
     ? `/b/${bucket.binding}/${filePath}/?theme=${theme}`
     : `/b/${bucket.binding}/download/${filePath}`;
   const displayName = entry.isDirectory ? `${entry.name}/` : entry.name;
-  const actionsUrl = `/b/${bucket.binding}/actions/${filePath}${
+  const detailsUrl = `/b/${bucket.binding}/details/${filePath}${
     entry.isDirectory ? "/" : ""
   }?theme=${theme}`;
 
-  const actionsLink = `<a href="${actionsUrl}" class="actions-link" title="Actions">⋮</a>`;
+  const detailsLink = `<a href="${detailsUrl}" class="details-link" title="Details">⋮</a>`;
   const typeDisplay = entry.isDirectory
     ? "Folder"
     : getFileType(entry.contentType);
@@ -240,6 +240,6 @@ function renderRow(
     <td class="type">${typeDisplay}</td>
     <td class="modified">${modifiedCell}</td>
     <td class="size">${entry.isDirectory ? "-" : formatSize(entry.size)}</td>
-    <td class="actions">${actionsLink}</td>
+    <td class="details">${detailsLink}</td>
   </tr>`;
 }
