@@ -5,7 +5,7 @@ import { detailsHandlerRoute, detailsPageRoute } from "./routes/details";
 import { downloadRoute } from "./routes/download";
 import { createFileRoute } from "./routes/file";
 import { createFolderRoute } from "./routes/folder";
-import { uploadFilesRoute } from "./routes/upload";
+import { uploadFilesRoute, uploadFolderRoute } from "./routes/upload";
 import type { BucketInfo } from "./types";
 import { discoverBuckets } from "./utils/buckets";
 
@@ -68,6 +68,9 @@ app.post("/b/:bucket/file", createFileRoute);
 
 // Upload files
 app.post("/b/:bucket/upload", uploadFilesRoute);
+
+// Upload folder
+app.post("/b/:bucket/upload-folder", uploadFolderRoute);
 
 // Details page for file/folder (rename, delete, etc.) - must be before browse routes
 app.get("/b/:bucket/details/*", detailsPageRoute);

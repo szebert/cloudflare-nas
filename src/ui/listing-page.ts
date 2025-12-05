@@ -203,6 +203,27 @@ ${entries
       </form>
     </div>
   </div>
+
+  <!-- Upload Folder Modal -->
+  <div id="upload-folder" class="modal-overlay">
+    <div class="modal">
+      <h2>📂 Upload Folder</h2>
+      <form class="modal-form" method="POST" action="/b/${
+        currentBucket.binding
+      }/upload-folder" enctype="multipart/form-data">
+        <input type="hidden" name="path" value="${path}">
+        <input type="hidden" name="theme" value="${theme}">
+        <div class="file-input-wrapper">
+          <input type="file" name="files" webkitdirectory multiple required>
+          <p class="file-hint">Select a folder to upload (preserves folder structure)</p>
+        </div>
+        <div class="modal-buttons">
+          <a href="${currentUrl}?theme=${theme}" class="btn-cancel">Cancel</a>
+          <button type="submit" class="btn-primary">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>`;
 }
