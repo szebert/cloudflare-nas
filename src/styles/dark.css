@@ -1,0 +1,165 @@
+body {
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+hr {
+  border-top: 1px solid #444;
+}
+th {
+  border-bottom: 1px solid #444;
+  background: #1a1a1a;
+}
+th a {
+  color: #e0e0e0;
+}
+a {
+  color: #6db3f2;
+}
+.footer {
+  color: #888;
+}
+.switcher-btn {
+  background: #333;
+  color: #e0e0e0;
+}
+.switcher-btn:hover {
+  background: #444;
+}
+.popup-menu {
+  background: #2a2a2a;
+  border: 1px solid #444;
+}
+.popup-item {
+  color: #e0e0e0;
+}
+.popup-item:hover {
+  background: #333;
+}
+.popup-item.current {
+  background: #3a3a3a;
+}
+.modal {
+  background: #2a2a2a;
+  border: 1px solid #444;
+}
+.metadata-editor-header {
+  background: #2a2a2a;
+}
+.modal-form input[type="text"],
+.modal-form textarea {
+  border: 1px solid #555;
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+.btn-cancel {
+  color: #aaa;
+}
+.btn-cancel:hover {
+  background: #333;
+}
+.btn-primary {
+  background: #0066cc;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #0077dd;
+}
+.breadcrumbs {
+  color: #888;
+}
+.file-details-page {
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+.btn-download {
+  background: #0066cc;
+  color: #fff;
+}
+.btn-download:hover {
+  background: #0077dd;
+}
+.btn-delete {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-delete:hover {
+  background: #c82333;
+}
+.btn-rename {
+  background: #28a745;
+  color: #fff;
+}
+.btn-rename:hover {
+  background: #34ce57;
+}
+.rename-form input[type="text"] {
+  border: 1px solid #555;
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+.preview-text {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #e0e0e0;
+}
+.metadata-editor-header {
+  border-bottom-color: #444;
+}
+.metadata-input {
+  border-color: #555;
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+.metadata-editor-row {
+  border-color: #444;
+}
+.metadata-item {
+  border-color: #444;
+  background: #222;
+}
+.metadata-delete-label:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.metadata-delete-checkbox {
+  background-color: #2a2a2a;
+  border-color: #555;
+}
+.metadata-delete-checkbox:checked {
+  border-color: #ff6b7a;
+}
+.metadata-editor-scrollable::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+.metadata-editor-scrollable::-webkit-scrollbar-thumb {
+  background: #555;
+}
+.metadata-editor-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+.metadata-editor-scrollable {
+  scrollbar-color: #555 #2a2a2a;
+}
+.table-wrapper::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: #555;
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+.table-wrapper {
+  scrollbar-color: #555 #2a2a2a;
+}
+.preview-text::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+.preview-text::-webkit-scrollbar-thumb {
+  background: #555;
+}
+.preview-text::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+.preview-text {
+  scrollbar-color: #555 #2a2a2a;
+}

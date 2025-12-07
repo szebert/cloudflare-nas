@@ -2,7 +2,6 @@ import type { FileDetails } from "../routes/details";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatDateUTC, formatSize } from "../utils/format";
 import { renderThemeSwitcher } from "./components";
-import { getThemeStyles } from "./styles";
 
 export interface DetailsPageOptions {
   bucketInfo: BucketInfo;
@@ -81,7 +80,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${name} - Details</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  ${getThemeStyles(theme)}
+  <link rel="stylesheet" href="/style.css?theme=${theme}">
 </head>
 <body>
   <div class="header">

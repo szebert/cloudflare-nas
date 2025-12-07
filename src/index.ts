@@ -5,6 +5,7 @@ import { detailsHandlerRoute, detailsPageRoute } from "./routes/details";
 import { downloadRoute } from "./routes/download";
 import { createFileRoute } from "./routes/file";
 import { createFolderRoute } from "./routes/folder";
+import { stylesRoute } from "./routes/styles";
 import { uploadFilesRoute, uploadFolderRoute } from "./routes/upload";
 import { webdavRoute } from "./routes/webdav";
 import type { BucketInfo } from "./types";
@@ -40,6 +41,8 @@ app.use("*", async (c, next) => {
 
 // Handle .well-known requests (Chrome DevTools, etc.)
 app.get("/.well-known/*", (c) => c.body(null, 204));
+
+app.get("/style.css", stylesRoute);
 
 // Serve favicon
 app.get("/favicon.ico", (c) => {

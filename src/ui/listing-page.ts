@@ -14,7 +14,6 @@ import {
   renderNewMenu,
   renderThemeSwitcher,
 } from "./components";
-import { getThemeStyles } from "./styles";
 
 export function renderListing(options: ListingOptions): string {
   const {
@@ -47,7 +46,7 @@ export function renderListing(options: ListingOptions): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${currentBucket.binding} - ${displayPath}</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  ${getThemeStyles(theme)}
+  <link rel="stylesheet" href="/style.css?theme=${theme}">
 </head>
 <body>
   <div class="header">

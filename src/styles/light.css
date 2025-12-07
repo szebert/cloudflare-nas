@@ -1,0 +1,122 @@
+body {
+  background: #fff;
+  color: #000;
+}
+hr {
+  border-top: 1px solid #ccc;
+}
+th {
+  border-bottom: 1px solid #ccc;
+  background: #fff;
+}
+th a {
+  color: #000;
+}
+a {
+  color: #0000cc;
+}
+.footer {
+  color: #666;
+}
+.switcher-btn {
+  background: #f0f0f0;
+  color: #000;
+}
+.switcher-btn:hover {
+  background: #e0e0e0;
+}
+.popup-menu {
+  background: #fff;
+  border: 1px solid #ddd;
+}
+.popup-item {
+  color: #000;
+}
+.popup-item:hover {
+  background: #f5f5f5;
+}
+.popup-item.current {
+  background: #e8f4fc;
+}
+.modal {
+  background: #fff;
+  border: 1px solid #ddd;
+}
+.metadata-editor-header {
+  background: #fff;
+}
+.modal-form input[type="text"],
+.modal-form textarea {
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #000;
+}
+.btn-cancel {
+  color: #666;
+}
+.btn-cancel:hover {
+  background: #f0f0f0;
+}
+.btn-primary {
+  background: #0066cc;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #0055aa;
+}
+.breadcrumbs {
+  color: #666;
+}
+.file-details-page {
+  background: #fff;
+  color: #000;
+}
+.btn-download {
+  background: #0066cc;
+  color: #fff;
+}
+.btn-download:hover {
+  background: #0055aa;
+}
+.btn-delete {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-delete:hover {
+  background: #c82333;
+}
+.btn-rename {
+  background: #28a745;
+  color: #fff;
+}
+.btn-rename:hover {
+  background: #218838;
+}
+.rename-form input[type="text"] {
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #000;
+}
+.preview-text {
+  background: #f8f8f8;
+  border-color: #ddd;
+  color: #000;
+}
+.metadata-editor-header {
+  border-bottom-color: #ccc;
+}
+.metadata-input {
+  border-color: #ccc;
+  background: #fff;
+  color: #000;
+}
+.metadata-editor-row {
+  border-color: #ddd;
+}
+.metadata-item {
+  border-color: #ddd;
+  background: #f9f9f9;
+}
+.metadata-delete-label:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
