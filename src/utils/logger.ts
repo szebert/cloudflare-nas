@@ -47,7 +47,11 @@ function makeLogger(env: Env): Logger {
     };
 
     // structured JSON, easy to search in CF logs
-    console.log(JSON.stringify(record));
+    if (level === "error") {
+      console.error(JSON.stringify(record));
+    } else {
+      console.log(JSON.stringify(record));
+    }
   }
 
   return {
