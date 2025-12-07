@@ -121,7 +121,17 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     </div>
 
     <div class="metadata-section">
-      <h2>Custom Metadata</h2>
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
+        <h2 style="margin: 0;">Custom Metadata</h2>
+        <div style="display: flex; gap: 8px;">
+          <a href="#metadata-add-modal" class="btn-rename" style="font-size: 12px; padding: 6px 12px;">➕ Add</a>
+          ${
+            Object.keys(customMetadata).length > 0
+              ? `<a href="#metadata-edit-modal" class="btn-rename" style="font-size: 12px; padding: 6px 12px;">✏️ Edit</a>`
+              : ""
+          }
+        </div>
+      </div>
       ${
         Object.keys(customMetadata).length === 0
           ? `<div class="metadata-empty">No custom metadata set</div>`
@@ -129,7 +139,13 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
             ${Object.entries(customMetadata)
               .map(
                 ([key, value]) =>
-                  `<div class="detail-label">${key}:</div><div class="detail-value">${value}</div>`
+                  `<div class="metadata-item">
+                    <div class="detail-label">${escapeHtml(
+                      key
+                    )}:</div><div class="detail-value">${escapeHtml(
+                    value
+                  )}</div>
+                  </div>`
               )
               .join("")}
           </div>`
@@ -213,6 +229,87 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
           <div class="modal-buttons">
             <a href="${currentDetailsUrl}" class="btn-cancel">Cancel</a>
             <button type="submit" class="btn-delete">Delete</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add Metadata Modal -->
+    <div id="metadata-add-modal" class="modal-overlay">
+      <div class="modal">
+        <h2>➕ Add Custom Metadata</h2>
+        <form method="POST" class="modal-form" action="/b/${
+          bucketInfo.binding
+        }/details/${fullPath}${isDirectory ? "/" : ""}">
+          <input type="hidden" name="action" value="addMetadata">
+          <input type="hidden" name="fullPath" value="${fullPath}">
+          <input type="hidden" name="isDirectory" value="${isDirectory}">
+          <input type="hidden" name="theme" value="${theme}">
+          
+          <div class="metadata-add-form">
+            <label>
+              <div style="margin-bottom: 4px; font-weight: 500; font-size: 13px;">Key</div>
+              <input type="text" name="metadataKey" value="" placeholder="Enter metadata key" class="metadata-input" autofocus>
+            </label>
+            <label>
+              <div style="margin-bottom: 4px; font-weight: 500; font-size: 13px;">Value</div>
+              <input type="text" name="metadataValue" value="" placeholder="Enter metadata value" class="metadata-input">
+            </label>
+          </div>
+          
+          <div class="modal-buttons">
+            <a href="${currentDetailsUrl}" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-primary">Add Metadata</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Metadata Modal -->
+    <div id="metadata-edit-modal" class="modal-overlay">
+      <div class="modal modal-wide">
+        <h2>✏️ Edit Custom Metadata</h2>
+        <form method="POST" class="modal-form" action="/b/${
+          bucketInfo.binding
+        }/details/${fullPath}${isDirectory ? "/" : ""}">
+          <input type="hidden" name="action" value="updateMetadata">
+          <input type="hidden" name="fullPath" value="${fullPath}">
+          <input type="hidden" name="isDirectory" value="${isDirectory}">
+          <input type="hidden" name="theme" value="${theme}">
+          
+          <div class="metadata-editor">
+            <div class="metadata-editor-header">
+              <div class="metadata-editor-label">Key</div>
+              <div class="metadata-editor-label">Value</div>
+              <div class="metadata-editor-label">Delete</div>
+            </div>
+            <div class="metadata-editor-scrollable">
+              ${Object.entries(customMetadata)
+                .map(
+                  ([key, value], index) => `
+                <div class="metadata-editor-row">
+                  <div class="metadata-row-label">Key</div>
+                  <input type="text" name="metadataKey_${index}" value="${escapeHtml(
+                    key
+                  )}" placeholder="Key" class="metadata-input">
+                  <div class="metadata-row-label">Value</div>
+                  <input type="text" name="metadataValue_${index}" value="${escapeHtml(
+                    value
+                  )}" placeholder="Value" class="metadata-input">
+                  <label class="metadata-delete-label">
+                    <input type="checkbox" name="metadataDelete_${index}" value="true" class="metadata-delete-checkbox">
+                    <span class="metadata-delete-text">Delete</span>
+                  </label>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+          
+          <div class="modal-buttons">
+            <a href="${currentDetailsUrl}" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-primary">Save Metadata</button>
           </div>
         </form>
       </div>

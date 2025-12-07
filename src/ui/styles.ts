@@ -83,11 +83,19 @@ export function getThemeStyles(theme: Theme): string {
       padding: 20px;
       width: 500px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-wide {
+      width: 700px;
+      max-width: 90vw;
     }
     .modal-form {
       display: flex;
       flex-direction: column;
       gap: 12px;
+      overflow: hidden;
     }
     .modal-form input[type="text"],
     .modal-form textarea {
@@ -295,7 +303,7 @@ export function getThemeStyles(theme: Theme): string {
     /* File details page */
     .file-details-page {
       margin: 0 auto;
-      min-width: 600px;
+      min-width: min(600px, 100%);
       padding: 20px;
     }
     .breadcrumbs {
@@ -387,6 +395,102 @@ export function getThemeStyles(theme: Theme): string {
       grid-template-columns: 140px 1fr;
       gap: 12px 16px;
       font-size: 14px;
+    }
+    .metadata-item {
+      display: contents;
+    }
+    .metadata-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .metadata-editor-scrollable {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      padding-bottom: 4px;
+    }
+    .metadata-editor-scrollable::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .metadata-editor-scrollable::-webkit-scrollbar-thumb {
+      background: rgba(128, 128, 128, 0.3);
+    }
+    .metadata-editor-scrollable::-webkit-scrollbar-thumb:hover {
+      background: rgba(128, 128, 128, 0.5);
+    }
+    .metadata-editor-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      font-weight: 500;
+      font-size: 12px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      padding-bottom: 4px;
+      border-bottom: 1px solid;
+    }
+    .metadata-editor-label {
+      padding: 0 4px;
+    }
+    .metadata-editor-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .metadata-row-label {
+      display: none;
+    }
+    .metadata-input {
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: 1px solid;
+      width: 100%;
+    }
+    .metadata-delete-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .metadata-delete-label:hover {
+      background: rgba(128, 128, 128, 0.1);
+    }
+    .metadata-delete-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      margin: 0;
+      appearance: none;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background-color: #fff;
+    }
+    .metadata-delete-checkbox:checked {
+      background-color: #dc3545;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' d='M10 3 4.5 8.5 2 6' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    .metadata-delete-text {
+      display: none;
+    }
+    .metadata-add-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .metadata-add-form label {
+      display: flex;
+      flex-direction: column;
     }
     .preview-section {
       margin-bottom: 24px;
@@ -533,10 +637,47 @@ export function getThemeStyles(theme: Theme): string {
       .details-grid,
       .metadata-list {
         grid-template-columns: 1fr;
-        gap: 8px;
       }
-      .detail-label {
+      .metadata-item {
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        border: 1px solid;
+        border-radius: 4px;
+        gap: 4px;
+      }
+      .metadata-editor-header,
+      .metadata-editor-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      .metadata-editor-header {
+        display: none;
+      }
+      .metadata-editor-row {
+        padding: 8px;
+        border: 1px solid;
+        border-radius: 4px;
+      }
+      .metadata-row-label {
+        display: block;
+        font-weight: 500;
+        font-size: 12px;
+        text-transform: uppercase;
+        opacity: 0.7;
         margin-bottom: 4px;
+      }
+      .metadata-input {
+        width: 100%;
+      }
+      .metadata-delete-label {
+        justify-self: start;
+        margin-top: 4px;
+      }
+      .metadata-delete-text {
+        display: inline;
+        font-size: 12px;
+        opacity: 0.8;
       }
       .rename-form {
         flex-direction: column;
@@ -591,6 +732,9 @@ export function getThemeStyles(theme: Theme): string {
     .modal {
       background: #fff;
       border: 1px solid #ddd;
+    }
+    .metadata-editor-header {
+      background: #fff;
     }
     .modal-form input[type="text"],
     .modal-form textarea {
@@ -648,6 +792,24 @@ export function getThemeStyles(theme: Theme): string {
       background: #f8f8f8;
       border-color: #ddd;
       color: #000;
+    }
+    .metadata-editor-header {
+      border-bottom-color: #ccc;
+    }
+    .metadata-input {
+      border-color: #ccc;
+      background: #fff;
+      color: #000;
+    }
+    .metadata-editor-row {
+      border-color: #ddd;
+    }
+    .metadata-item {
+      border-color: #ddd;
+      background: #f9f9f9;
+    }
+    .metadata-delete-label:hover {
+      background: rgba(0, 0, 0, 0.05);
     }
   `;
 
@@ -707,6 +869,9 @@ export function getThemeStyles(theme: Theme): string {
     .modal {
       background: #2a2a2a;
       border: 1px solid #444;
+    }
+    .metadata-editor-header {
+      background: #2a2a2a;
     }
     .modal-form input[type="text"],
     .modal-form textarea {
@@ -774,6 +939,43 @@ export function getThemeStyles(theme: Theme): string {
     }
     .preview-text::-webkit-scrollbar-thumb:hover {
       background: #666;
+    }
+    .metadata-editor-header {
+      border-bottom-color: #444;
+    }
+    .metadata-input {
+      border-color: #555;
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+    .metadata-editor-row {
+      border-color: #444;
+    }
+    .metadata-item {
+      border-color: #444;
+      background: #222;
+    }
+    .metadata-delete-label:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .metadata-delete-checkbox {
+      background-color: #2a2a2a;
+      border-color: #555;
+    }
+    .metadata-delete-checkbox:checked {
+      border-color: #ff6b7a;
+    }
+    .metadata-editor-scrollable::-webkit-scrollbar-track {
+      background: #2a2a2a;
+    }
+    .metadata-editor-scrollable::-webkit-scrollbar-thumb {
+      background: #555;
+    }
+    .metadata-editor-scrollable::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
+    .metadata-editor-scrollable {
+      scrollbar-color: #555 #2a2a2a;
     }
   `;
 

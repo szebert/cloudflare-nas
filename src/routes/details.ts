@@ -194,6 +194,10 @@ export async function detailsHandlerRoute(
       return handleRename(c, bucketInfo, formData, theme);
     case "delete":
       return handleDelete(c, bucketInfo, formData, theme);
+    case "addMetadata":
+      return handleAddMetadata(c, bucketInfo, formData, theme);
+    case "updateMetadata":
+      return handleUpdateMetadata(c, bucketInfo, formData, theme);
     default:
       return c.text(`Unknown action: ${action}`, 400);
   }
@@ -345,5 +349,129 @@ async function handleDelete(
     return c.redirect(`${redirectPath}?theme=${theme}`, 303);
   } catch (error) {
     return c.text(`Failed to delete: ${String(error)}`, 500);
+  }
+}
+
+async function handleAddMetadata(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData,
+  theme: string
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+  const key = formData.get("metadataKey") as string;
+  const value = formData.get("metadataValue") as string;
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Metadata can only be updated for files, not directories
+  if (isDirectory) {
+    return c.text("Cannot update metadata for directories", 400);
+  }
+
+  try {
+    // Get the current object
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Get existing metadata and add the new entry
+    // Allow empty/null keys and values
+    const existingMetadata = object.customMetadata || {};
+    const newMetadata = {
+      ...existingMetadata,
+      [key ?? ""]: value ?? "",
+    };
+
+    // Update the object with new metadata
+    await bucketInfo.bucket.put(fullPath, object.body, {
+      httpMetadata: object.httpMetadata,
+      customMetadata: newMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to add metadata: ${String(error)}`, 500);
+  }
+}
+
+async function handleUpdateMetadata(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData,
+  theme: string
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Metadata can only be updated for files, not directories
+  if (isDirectory) {
+    return c.text("Cannot update metadata for directories", 400);
+  }
+
+  try {
+    // Parse all metadata entries from form data
+    const metadataEntries: Array<{
+      key: string;
+      value: string;
+      delete: boolean;
+    }> = [];
+    let index = 0;
+
+    while (true) {
+      const key = formData.get(`metadataKey_${index}`) as string | null;
+      const value = formData.get(`metadataValue_${index}`) as string | null;
+      const deleteFlag = formData.get(`metadataDelete_${index}`) === "true";
+
+      if (key === null && value === null) {
+        break; // No more entries
+      }
+
+      // Allow empty/null keys and values, don't trim
+      metadataEntries.push({
+        key: key ?? "",
+        value: value ?? "",
+        delete: deleteFlag,
+      });
+
+      index++;
+    }
+
+    // Build the new metadata object, filtering out only deleted entries
+    // Allow empty keys and values
+    const newMetadata: Record<string, string> = {};
+    for (const entry of metadataEntries) {
+      if (!entry.delete) {
+        newMetadata[entry.key] = entry.value;
+      }
+    }
+
+    // Get the current object
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Update the object with new metadata
+    await bucketInfo.bucket.put(fullPath, object.body, {
+      httpMetadata: object.httpMetadata,
+      customMetadata: newMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to update metadata: ${String(error)}`, 500);
   }
 }
