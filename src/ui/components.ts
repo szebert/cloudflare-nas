@@ -35,7 +35,7 @@ export function renderThemeSwitcher(
 
   return `
     <div class="switcher-popup">
-      <button type="button" class="switcher-btn">
+      <button type="button" class="btn switcher-btn">
         ${currentEmoji} Theme ▾
       </button>
       <div class="popup-menu">
@@ -62,7 +62,7 @@ export function renderBucketSwitcher(
 
   return `
     <div class="switcher-popup">
-      <button type="button" class="switcher-btn">
+      <button type="button" class="btn switcher-btn">
         📁 ${currentBucket.binding} ▾
       </button>
       <div class="popup-menu">
@@ -74,7 +74,7 @@ export function renderBucketSwitcher(
 export function renderNewMenu(): string {
   return `
     <div class="switcher-popup">
-      <button type="button" class="switcher-btn">
+      <button type="button" class="btn switcher-btn">
         ➕ New ▾
       </button>
       <div class="popup-menu">

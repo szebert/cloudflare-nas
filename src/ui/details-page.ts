@@ -98,11 +98,11 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     <div class="action-buttons">
       ${
         !isDirectory
-          ? `<a href="${downloadUrl}?theme=${theme}" class="btn-download">⬇️ Download</a>`
+          ? `<a href="${downloadUrl}?theme=${theme}" class="btn btn-primary">⬇️ Download</a>`
           : ""
       }
-      <a href="#move-rename-modal" class="btn-rename">📦 Move/Rename</a>
-      <a href="#${deleteModalId}" class="btn-delete">🗑️ Delete</a>
+      <a href="#move-rename-modal" class="btn btn-secondary">📦 Move/Rename</a>
+      <a href="#${deleteModalId}" class="btn btn-delete">🗑️ Delete</a>
     </div>
 
     <div class="details-section">
@@ -120,13 +120,13 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     </div>
 
     <div class="metadata-section">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
-        <h2 style="margin: 0;">Custom Metadata</h2>
-        <div style="display: flex; gap: 8px;">
-          <a href="#metadata-add-modal" class="btn-rename" style="font-size: 12px; padding: 6px 12px;">➕ Add</a>
+      <div class="metadata-section-header">
+        <h2>Custom Metadata</h2>
+        <div class="metadata-buttons">
+          <a href="#metadata-add-modal" class="btn btn-success">➕ Add</a>
           ${
             Object.keys(customMetadata).length > 0
-              ? `<a href="#metadata-edit-modal" class="btn-rename" style="font-size: 12px; padding: 6px 12px;">✏️ Edit</a>`
+              ? `<a href="#metadata-edit-modal" class="btn btn-secondary">✏️ Edit</a>`
               : ""
           }
         </div>
@@ -203,8 +203,8 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
           <input type="hidden" name="theme" value="${theme}">
           <input type="text" name="newFullPath" value="${fullPath}" placeholder="Enter new path" required autofocus>
           <div class="modal-buttons">
-            <a href="${currentDetailsUrl}" class="btn-cancel">Cancel</a>
-            <button type="submit" class="btn-primary">Move/Rename</button>
+            <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-secondary">Move/Rename</button>
           </div>
         </form>
       </div>
@@ -226,8 +226,8 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
           <input type="hidden" name="isDirectory" value="${isDirectory}">
           <input type="hidden" name="theme" value="${theme}">
           <div class="modal-buttons">
-            <a href="${currentDetailsUrl}" class="btn-cancel">Cancel</a>
-            <button type="submit" class="btn-delete">Delete</button>
+            <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-delete">Delete</button>
           </div>
         </form>
       </div>
@@ -247,18 +247,18 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
           
           <div class="metadata-add-form">
             <label>
-              <div style="margin-bottom: 4px; font-weight: 500; font-size: 13px;">Key</div>
+              <div class="metadata-label-text">Key</div>
               <input type="text" name="metadataKey" value="" placeholder="Enter metadata key" class="metadata-input" autofocus>
             </label>
             <label>
-              <div style="margin-bottom: 4px; font-weight: 500; font-size: 13px;">Value</div>
+              <div class="metadata-label-text">Value</div>
               <input type="text" name="metadataValue" value="" placeholder="Enter metadata value" class="metadata-input">
             </label>
           </div>
           
           <div class="modal-buttons">
-            <a href="${currentDetailsUrl}" class="btn-cancel">Cancel</a>
-            <button type="submit" class="btn-primary">Add Metadata</button>
+            <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-success">Add Metadata</button>
           </div>
         </form>
       </div>
@@ -307,8 +307,8 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
           </div>
           
           <div class="modal-buttons">
-            <a href="${currentDetailsUrl}" class="btn-cancel">Cancel</a>
-            <button type="submit" class="btn-primary">Save Metadata</button>
+            <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-secondary">Save Metadata</button>
           </div>
         </form>
       </div>

@@ -156,8 +156,8 @@ ${entries
         <input type="hidden" name="theme" value="${theme}">
         <input type="text" name="name" placeholder="Folder name" required autofocus>
         <div class="modal-buttons">
-          <a href="${currentUrl}?theme=${theme}" class="btn-cancel">Cancel</a>
-          <button type="submit" class="btn-primary">Create</button>
+          <a href="${currentUrl}?theme=${theme}" class="btn btn-cancel">Cancel</a>
+          <button type="submit" class="btn btn-success">Create</button>
         </div>
       </form>
     </div>
@@ -175,8 +175,8 @@ ${entries
         <input type="text" name="name" placeholder="filename.txt" required autofocus>
         <textarea name="content" placeholder="File content (optional)" rows="8"></textarea>
         <div class="modal-buttons">
-          <a href="${currentUrl}?theme=${theme}" class="btn-cancel">Cancel</a>
-          <button type="submit" class="btn-primary">Create</button>
+          <a href="${currentUrl}?theme=${theme}" class="btn btn-cancel">Cancel</a>
+          <button type="submit" class="btn btn-success">Create</button>
         </div>
       </form>
     </div>
@@ -196,8 +196,8 @@ ${entries
           <p class="file-hint">Select one or more files to upload</p>
         </div>
         <div class="modal-buttons">
-          <a href="${currentUrl}?theme=${theme}" class="btn-cancel">Cancel</a>
-          <button type="submit" class="btn-primary">Upload</button>
+          <a href="${currentUrl}?theme=${theme}" class="btn btn-cancel">Cancel</a>
+          <button type="submit" class="btn btn-success">Upload</button>
         </div>
       </form>
     </div>
@@ -217,8 +217,8 @@ ${entries
           <p class="file-hint">Select a folder to upload (preserves folder structure)</p>
         </div>
         <div class="modal-buttons">
-          <a href="${currentUrl}?theme=${theme}" class="btn-cancel">Cancel</a>
-          <button type="submit" class="btn-primary">Upload</button>
+          <a href="${currentUrl}?theme=${theme}" class="btn btn-cancel">Cancel</a>
+          <button type="submit" class="btn btn-success">Upload</button>
         </div>
       </form>
     </div>

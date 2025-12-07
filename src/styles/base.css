@@ -126,25 +126,6 @@ hr {
   gap: 8px;
   margin-top: 8px;
 }
-.modal-buttons a,
-.modal-buttons button {
-  padding: 8px 16px;
-  font-size: 13px;
-  border-radius: 4px;
-  cursor: pointer;
-  text-decoration: none;
-  border: none;
-}
-.modal-buttons a:hover,
-.modal-buttons button:hover {
-  text-decoration: none;
-}
-.btn-cancel {
-  background: transparent;
-}
-.btn-primary {
-  font-weight: 500;
-}
 
 /* Table */
 table {
@@ -227,6 +208,27 @@ a:hover {
   text-decoration: none;
 }
 
+.btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.btn:hover {
+  text-decoration: none;
+}
+.btn-cancel {
+  background: transparent;
+}
+
 /* Popup switchers (bucket & theme) */
 .switcher-popup {
   position: relative;
@@ -235,11 +237,6 @@ a:hover {
 .switcher-btn {
   padding: 4px 10px;
   font-size: 13px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: none;
-  display: inline-flex;
-  align-items: center;
   gap: 4px;
 }
 .popup-menu {
@@ -301,12 +298,10 @@ a:hover {
 /* File details page */
 .file-details-page {
   margin: 0 auto;
-  min-width: min(600px, 100%);
   padding: 20px;
 }
 .breadcrumbs {
   font-size: 13px;
-  margin-bottom: 20px;
 }
 .breadcrumbs a {
   text-decoration: none;
@@ -317,55 +312,7 @@ a:hover {
 .action-buttons {
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
-}
-.btn-download {
-  padding: 8px 16px;
-  border-radius: 4px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-}
-.btn-download:hover {
-  text-decoration: none;
-}
-.btn-delete {
-  padding: 8px 16px;
-  border-radius: 4px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-}
-.btn-delete:hover {
-  text-decoration: none;
-}
-.btn-rename {
-  padding: 8px 16px;
-  border-radius: 4px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-}
-.btn-rename:hover {
-  text-decoration: none;
-}
-.details-section {
-  margin-bottom: 24px;
+  margin: 24px 0;
 }
 .details-grid {
   display: grid;
@@ -380,8 +327,17 @@ a:hover {
 .detail-value {
   word-break: break-word;
 }
-.metadata-section {
-  margin-bottom: 24px;
+.metadata-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.metadata-section-header h2 {
+  margin-bottom: 0;
+}
+.metadata-label-text {
+  margin-bottom: 4px;
 }
 .metadata-empty {
   font-size: 13px;
@@ -476,6 +432,10 @@ a:hover {
 }
 .metadata-delete-text {
   display: none;
+}
+.metadata-buttons {
+  display: flex;
+  gap: 8px;
 }
 .metadata-add-form {
   display: flex;
@@ -620,13 +580,7 @@ a:hover {
     box-sizing: border-box;
   }
   .action-buttons {
-    width: 100%;
     flex-direction: column;
-  }
-  .action-buttons .btn-download,
-  .action-buttons .btn-delete,
-  .action-buttons .btn-rename {
-    justify-content: center;
   }
   .details-grid,
   .metadata-list {
@@ -668,6 +622,9 @@ a:hover {
     display: inline;
     font-size: 12px;
     opacity: 0.8;
+  }
+  .metadata-section-header {
+    flex-direction: column;
   }
   .rename-form {
     flex-direction: column;

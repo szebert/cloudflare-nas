@@ -58,25 +58,25 @@ a {
   background: #333;
 }
 .btn-primary {
-  background: #0066cc;
+  background: #4a90e2;
   color: #fff;
 }
 .btn-primary:hover {
-  background: #0077dd;
+  background: #5aa0f2;
 }
-.breadcrumbs {
-  color: #888;
-}
-.file-details-page {
-  background: #1a1a1a;
-  color: #e0e0e0;
-}
-.btn-download {
-  background: #0066cc;
+.btn-secondary {
+  background: #f39c12;
   color: #fff;
 }
-.btn-download:hover {
-  background: #0077dd;
+.btn-secondary:hover {
+  background: #ffad2a;
+}
+.btn-success {
+  background: #5cb85c;
+  color: #fff;
+}
+.btn-success:hover {
+  background: #6cc86c;
 }
 .btn-delete {
   background: #dc3545;
@@ -85,12 +85,12 @@ a {
 .btn-delete:hover {
   background: #c82333;
 }
-.btn-rename {
-  background: #28a745;
-  color: #fff;
+.breadcrumbs {
+  color: #888;
 }
-.btn-rename:hover {
-  background: #34ce57;
+.file-details-page {
+  background: #1a1a1a;
+  color: #e0e0e0;
 }
 .rename-form input[type="text"] {
   border: 1px solid #555;
