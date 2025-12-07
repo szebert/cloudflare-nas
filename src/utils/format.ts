@@ -82,3 +82,32 @@ export function escapeHtml(text: string): string {
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
 }
+
+/**
+ * Formats a Content-Disposition header value with proper encoding for non-ASCII filenames.
+ * Uses RFC 5987 format for non-ASCII characters to ensure browser compatibility.
+ * @param filename The filename to encode
+ * @returns Properly formatted Content-Disposition header value
+ */
+export function formatContentDisposition(filename: string): string {
+  // Check if filename contains only ASCII characters
+  const isASCII = /^[\x00-\x7F]*$/.test(filename);
+
+  if (isASCII) {
+    // Simple case: ASCII-only filename
+    return `attachment; filename="${filename}"`;
+  }
+
+  // Non-ASCII filename: use RFC 5987 encoding
+  // Percent-encode the UTF-8 bytes
+  const encoded = encodeURIComponent(filename)
+    .replace(/'/g, "%27")
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29");
+
+  // Provide both a simple ASCII fallback and the UTF-8 encoded version
+  // The fallback removes non-ASCII characters
+  const fallback = filename.replace(/[^\x00-\x7F]/g, "_");
+
+  return `attachment; filename="${fallback}"; filename*=UTF-8''${encoded}`;
+}

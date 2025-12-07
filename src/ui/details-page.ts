@@ -54,6 +54,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     textContent,
     isTooLargeForTextPreview,
     isImage: isImageFile,
+    isVideo: isVideoFile,
   } = fileDetails;
 
   const breadcrumbs = buildBreadcrumbs(bucketInfo.binding, fullPath, theme);
@@ -62,6 +63,9 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
   }?theme=${theme}`;
 
   const downloadUrl = `/b/${bucketInfo.binding}/download/${fullPath}`;
+  const videoUrl = isVideoFile
+    ? `/b/${bucketInfo.binding}/download/${fullPath}`
+    : null;
   const imageUrl = isImageFile
     ? `/b/${bucketInfo.binding}/download/${fullPath}`
     : null;
@@ -161,6 +165,12 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
           ? `
       <div class="preview-container">
         <div class="preview-unsupported">File is empty (0 bytes). No preview available.</div>
+      </div>
+      `
+          : videoUrl
+          ? `
+      <div class="preview-container">
+        <video src="${videoUrl}" controls class="preview-video">Your browser does not support the video tag.</video>
       </div>
       `
           : imageUrl

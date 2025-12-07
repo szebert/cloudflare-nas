@@ -3,6 +3,7 @@ import type { BucketInfo, Theme } from "../types";
 import { renderDetailsPage } from "../ui/details-page";
 import { getBucketByBinding } from "../utils/buckets";
 import { isImage } from "../utils/image-detection";
+import { isVideo } from "../utils/video-detection";
 
 export interface FileDetails {
   name: string;
@@ -17,6 +18,7 @@ export interface FileDetails {
   textContent?: string | null;
   isTooLargeForTextPreview?: boolean;
   isImage?: boolean;
+  isVideo?: boolean;
 }
 
 async function getFileDetails(
@@ -77,22 +79,34 @@ async function getFileDetails(
     // Skip preview for 0-byte files
     const isEmpty = head.size === 0;
 
-    // Check if it's an image (does easy checks first, falls back to magic bytes if needed)
+    // Check if it's a video first (priority: video > image > text)
+    let isVideoFile = false;
     let isImageFile = false;
     if (!isEmpty) {
-      isImageFile = await isImage(
+      isVideoFile = await isVideo(
         contentType,
         name,
         bucket,
         cleanPath,
         head.size
       );
+
+      // Only check for image if it's not a video
+      if (!isVideoFile) {
+        isImageFile = await isImage(
+          contentType,
+          name,
+          bucket,
+          cleanPath,
+          head.size
+        );
+      }
     }
 
-    // Try to fetch text content for non-image files (images take priority)
+    // Try to fetch text content for non-video, non-image files
     // Only try for files up to 1MB to avoid memory issues
     const MAX_TEXT_PREVIEW_SIZE = 1024 * 1024; // 1MB
-    if (!isImageFile && !isEmpty) {
+    if (!isVideoFile && !isImageFile && !isEmpty) {
       if (head.size > MAX_TEXT_PREVIEW_SIZE) {
         isTooLargeForTextPreview = true;
       } else {
@@ -127,6 +141,7 @@ async function getFileDetails(
       textContent,
       isTooLargeForTextPreview,
       isImage: isImageFile,
+      isVideo: isVideoFile,
     };
   }
 }

@@ -1,6 +1,7 @@
 import type { Context } from "hono";
 import type { BucketInfo } from "../types";
 import { getBucketByBinding } from "../utils/buckets";
+import { formatContentDisposition } from "../utils/format";
 
 export async function downloadRoute(
   c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[] } }>
@@ -39,9 +40,9 @@ export async function downloadRoute(
   headers.set("Content-Length", object.size.toString());
   headers.set("ETag", object.httpEtag);
 
-  // Set Content-Disposition for download
+  // Set Content-Disposition for download with proper encoding for non-ASCII filenames
   const filename = key.split("/").pop() || "download";
-  headers.set("Content-Disposition", `attachment; filename="${filename}"`);
+  headers.set("Content-Disposition", formatContentDisposition(filename));
 
   if (object.uploaded) {
     headers.set("Last-Modified", object.uploaded.toUTCString());

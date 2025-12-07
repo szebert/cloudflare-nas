@@ -477,8 +477,12 @@ a:hover {
 }
 .preview-image {
   max-width: 100%;
-  max-height: 500px;
+  max-height: 600px;
   object-fit: contain;
+}
+.preview-video {
+  max-height: 600px;
+  width: 100%;
 }
 .preview-unsupported {
   opacity: 0.7;
