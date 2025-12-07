@@ -40,11 +40,6 @@ function buildBreadcrumbs(
     .join(" / ");
 }
 
-function canPreviewImage(contentType: string | null): boolean {
-  if (!contentType) return false;
-  return contentType.startsWith("image/");
-}
-
 export function renderDetailsPage(options: DetailsPageOptions): string {
   const { bucketInfo, fileDetails, theme, buckets } = options;
   const {
@@ -59,6 +54,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     storageClass,
     textContent,
     isTooLargeForTextPreview,
+    isImage: isImageFile,
   } = fileDetails;
 
   const breadcrumbs = buildBreadcrumbs(bucketInfo.binding, fullPath, theme);
@@ -67,7 +63,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
   }?theme=${theme}`;
 
   const downloadUrl = `/b/${bucketInfo.binding}/download/${fullPath}`;
-  const previewUrl = canPreviewImage(contentType)
+  const imageUrl = isImageFile
     ? `/b/${bucketInfo.binding}/download/${fullPath}`
     : null;
   const deleteModalId = `delete-${fullPath.replace(/[^a-zA-Z0-9]/g, "-")}`;
@@ -141,38 +137,39 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     </div>
 
     ${
-      !isDirectory && previewUrl
+      !isDirectory
         ? `
     <div class="preview-section">
       <h2>Object Preview</h2>
+      ${
+        size === 0
+          ? `
       <div class="preview-container">
-        <img src="${previewUrl}" alt="${name}" class="preview-image" />
+        <div class="preview-unsupported">File is empty (0 bytes). No preview available.</div>
       </div>
-    </div>
-    `
-        : !isDirectory && textContent !== null && textContent !== undefined
-        ? `
-    <div class="preview-section">
-      <h2>Object Preview</h2>
+      `
+          : imageUrl
+          ? `
+      <div class="preview-container">
+        <img src="${imageUrl}" alt="${name}" class="preview-image" />
+      </div>
+      `
+          : textContent !== null && textContent !== undefined
+          ? `
       <pre class="preview-text">${escapeHtml(textContent)}</pre>
-    </div>
-    `
-        : !isDirectory && isTooLargeForTextPreview
-        ? `
-    <div class="preview-section">
-      <h2>Object Preview</h2>
+      `
+          : isTooLargeForTextPreview
+          ? `
       <div class="preview-container">
         <div class="preview-unsupported">File is too large to preview (over 1MB). Please download to view.</div>
       </div>
-    </div>
-    `
-        : !isDirectory
-        ? `
-    <div class="preview-section">
-      <h2>Object Preview</h2>
+      `
+          : `
       <div class="preview-container">
         <div class="preview-unsupported">Preview not available for this file type</div>
       </div>
+      `
+      }
     </div>
     `
         : ""
