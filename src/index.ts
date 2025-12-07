@@ -6,6 +6,7 @@ import { downloadRoute } from "./routes/download";
 import { createFileRoute } from "./routes/file";
 import { createFolderRoute } from "./routes/folder";
 import { uploadFilesRoute, uploadFolderRoute } from "./routes/upload";
+import { webdavRoute } from "./routes/webdav";
 import type { BucketInfo } from "./types";
 import { discoverBuckets } from "./utils/buckets";
 import { initLogger } from "./utils/logger";
@@ -63,6 +64,10 @@ app.get("/", (c) => {
   }
   return c.redirect(`/b/${buckets[0].binding}/`);
 });
+
+// WebDAV routes for mounting as network drive (must be before other routes)
+app.all("/webdav/:bucket/*", webdavRoute);
+app.all("/webdav/:bucket", webdavRoute);
 
 // Download files from bucket
 app.get("/b/:bucket/download/*", downloadRoute);

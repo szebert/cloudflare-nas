@@ -62,3 +62,12 @@ export function getParentPath(path: string): string | null {
 export function getFilePath(basePath: string, filename: string): string {
   return basePath ? `${basePath}${filename}` : filename;
 }
+
+export function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
