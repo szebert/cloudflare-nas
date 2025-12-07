@@ -55,6 +55,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     isTooLargeForTextPreview,
     isImage: isImageFile,
     isVideo: isVideoFile,
+    canEditFile,
   } = fileDetails;
 
   const breadcrumbs = buildBreadcrumbs(bucketInfo.binding, fullPath, theme);
@@ -103,6 +104,11 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
       ${
         !isDirectory
           ? `<a href="${downloadUrl}?theme=${theme}" class="btn btn-primary">⬇️ Download</a>`
+          : ""
+      }
+      ${
+        canEditFile
+          ? `<a href="#edit-file-modal" class="btn btn-secondary">✏️ Edit</a>`
           : ""
       }
       <a href="#move-rename-modal" class="btn btn-secondary">📦 Move/Rename</a>
@@ -195,6 +201,33 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
       </div>
       `
       }
+    </div>
+    `
+        : ""
+    }
+
+    ${
+      canEditFile
+        ? `
+    <!-- Edit File Modal -->
+    <div id="edit-file-modal" class="modal-overlay">
+      <div class="modal modal-wide">
+        <h2>✏️ Edit File</h2>
+        <form class="modal-form" method="POST" action="/b/${
+          bucketInfo.binding
+        }/details/${fullPath}">
+          <input type="hidden" name="action" value="edit">
+          <input type="hidden" name="fullPath" value="${fullPath}">
+          <input type="hidden" name="theme" value="${theme}">
+          <textarea name="content" placeholder="File content" rows="12" required autofocus>${escapeHtml(
+            textContent || ""
+          )}</textarea>
+          <div class="modal-buttons">
+            <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-success">Save</button>
+          </div>
+        </form>
+      </div>
     </div>
     `
         : ""

@@ -5,6 +5,8 @@ import { getBucketByBinding } from "../utils/buckets";
 import { isImage } from "../utils/image-detection";
 import { isVideo } from "../utils/video-detection";
 
+const MAX_TEXT_PREVIEW_SIZE = 1024 * 1024; // 1MB
+
 export interface FileDetails {
   name: string;
   fullPath: string;
@@ -19,6 +21,7 @@ export interface FileDetails {
   isTooLargeForTextPreview?: boolean;
   isImage?: boolean;
   isVideo?: boolean;
+  canEditFile: boolean;
 }
 
 async function getFileDetails(
@@ -58,6 +61,7 @@ async function getFileDetails(
       contentType: null,
       customMetadata: {},
       storageClass: null,
+      canEditFile: false,
     };
   } else {
     // For files, use head() to get metadata without downloading the body
@@ -105,7 +109,6 @@ async function getFileDetails(
 
     // Try to fetch text content for non-video, non-image files
     // Only try for files up to 1MB to avoid memory issues
-    const MAX_TEXT_PREVIEW_SIZE = 1024 * 1024; // 1MB
     if (!isVideoFile && !isImageFile && !isEmpty) {
       if (head.size > MAX_TEXT_PREVIEW_SIZE) {
         isTooLargeForTextPreview = true;
@@ -128,6 +131,13 @@ async function getFileDetails(
       }
     }
 
+    const canEditFile =
+      textContent !== null &&
+      textContent !== undefined &&
+      !isTooLargeForTextPreview &&
+      !isImageFile &&
+      !isVideoFile;
+
     return {
       name,
       fullPath: cleanPath,
@@ -142,6 +152,7 @@ async function getFileDetails(
       isTooLargeForTextPreview,
       isImage: isImageFile,
       isVideo: isVideoFile,
+      canEditFile,
     };
   }
 }
@@ -213,6 +224,8 @@ export async function detailsHandlerRoute(
       return handleAddMetadata(c, bucketInfo, formData, theme);
     case "updateMetadata":
       return handleUpdateMetadata(c, bucketInfo, formData, theme);
+    case "edit":
+      return handleEdit(c, bucketInfo, formData, theme);
     default:
       return c.text(`Unknown action: ${action}`, 400);
   }
@@ -488,5 +501,45 @@ async function handleUpdateMetadata(
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to update metadata: ${String(error)}`, 500);
+  }
+}
+
+async function handleEdit(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData,
+  theme: string
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const content = formData.get("content") as string;
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Enforce 1MB limit
+  const contentSize = new TextEncoder().encode(content).length;
+  if (contentSize > MAX_TEXT_PREVIEW_SIZE) {
+    return c.text("File content exceeds 1MB limit", 400);
+  }
+
+  try {
+    // Get the current object to preserve metadata
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Update the object with new content while preserving metadata
+    await bucketInfo.bucket.put(fullPath, content, {
+      httpMetadata: object.httpMetadata,
+      customMetadata: object.customMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to edit file: ${String(error)}`, 500);
   }
 }
