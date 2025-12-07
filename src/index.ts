@@ -8,11 +8,18 @@ import { createFolderRoute } from "./routes/folder";
 import { uploadFilesRoute, uploadFolderRoute } from "./routes/upload";
 import type { BucketInfo } from "./types";
 import { discoverBuckets } from "./utils/buckets";
+import { initLogger } from "./utils/logger";
 
 const app = new Hono<{
   Bindings: Env;
   Variables: { buckets: BucketInfo[] };
 }>();
+
+// Initialize our global structured logger once per request
+app.use("*", async (c, next) => {
+  initLogger(c.env);
+  await next();
+});
 
 // Basic authentication using env vars
 app.use("*", async (c, next) => {
