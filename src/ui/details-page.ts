@@ -1,6 +1,6 @@
 import type { FileDetails } from "../routes/details";
 import type { BucketInfo, Theme } from "../types";
-import { formatDateUTC, formatSize } from "../utils/format";
+import { escapeHtml, formatDateUTC, formatSize } from "../utils/format";
 import { renderThemeSwitcher } from "./components";
 import { getThemeStyles } from "./styles";
 
@@ -57,6 +57,8 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     contentType,
     customMetadata,
     storageClass,
+    textContent,
+    isTooLargeForTextPreview,
   } = fileDetails;
 
   const breadcrumbs = buildBreadcrumbs(bucketInfo.binding, fullPath, theme);
@@ -145,6 +147,22 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
       <h2>Object Preview</h2>
       <div class="preview-container">
         <img src="${previewUrl}" alt="${name}" class="preview-image" />
+      </div>
+    </div>
+    `
+        : !isDirectory && textContent !== null && textContent !== undefined
+        ? `
+    <div class="preview-section">
+      <h2>Object Preview</h2>
+      <pre class="preview-text">${escapeHtml(textContent)}</pre>
+    </div>
+    `
+        : !isDirectory && isTooLargeForTextPreview
+        ? `
+    <div class="preview-section">
+      <h2>Object Preview</h2>
+      <div class="preview-container">
+        <div class="preview-unsupported">File is too large to preview (over 1MB). Please download to view.</div>
       </div>
     </div>
     `

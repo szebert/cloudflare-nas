@@ -19,7 +19,7 @@ export function getThemeStyles(theme: Theme): string {
       max-height: 100%;
     }
     h1 {
-      font-size: 18px;
+      font-size: 1.275em;
       font-weight: normal;
       margin: 0;
       white-space: nowrap;
@@ -83,11 +83,6 @@ export function getThemeStyles(theme: Theme): string {
       padding: 20px;
       width: 500px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-    .modal h2 {
-      margin: 0 0 16px 0;
-      font-size: 16px;
-      font-weight: 600;
     }
     .modal-form {
       display: flex;
@@ -366,11 +361,6 @@ export function getThemeStyles(theme: Theme): string {
     .details-section {
       margin-bottom: 24px;
     }
-    .details-section h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0 0 12px 0;
-    }
     .details-grid {
       display: grid;
       grid-template-columns: 140px 1fr;
@@ -387,11 +377,6 @@ export function getThemeStyles(theme: Theme): string {
     .metadata-section {
       margin-bottom: 24px;
     }
-    .metadata-section h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0 0 12px 0;
-    }
     .metadata-empty {
       font-size: 13px;
       opacity: 0.7;
@@ -405,11 +390,6 @@ export function getThemeStyles(theme: Theme): string {
     }
     .preview-section {
       margin-bottom: 24px;
-    }
-    .preview-section h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0 0 12px 0;
     }
     .preview-container {
       position: relative;
@@ -447,13 +427,18 @@ export function getThemeStyles(theme: Theme): string {
       font-style: italic;
       align-self: center;
     }
+    .preview-text {
+      padding: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 600px;
+      overflow-y: auto;
+      border: 1px solid;
+      border-radius: 4px;
+    }
     .rename-section {
       margin-bottom: 24px;
-    }
-    .rename-section h2 {
-      font-size: 16px;
-      font-weight: 600;
-      margin: 0 0 12px 0;
     }
     .rename-form {
       display: flex;
@@ -488,9 +473,6 @@ export function getThemeStyles(theme: Theme): string {
       }
       .header-controls {
         justify-content: flex-end;
-      }
-      h1 {
-        font-size: 16px;
       }
       th, td {
         padding: 8px 6px 8px 0;
@@ -662,6 +644,11 @@ export function getThemeStyles(theme: Theme): string {
       background: #fff;
       color: #000;
     }
+    .preview-text {
+      background: #f8f8f8;
+      border-color: #ddd;
+      color: #000;
+    }
   `;
 
   const darkColors = `
@@ -772,6 +759,21 @@ export function getThemeStyles(theme: Theme): string {
       border: 1px solid #555;
       background: #1a1a1a;
       color: #e0e0e0;
+    }
+    .preview-text {
+      background: #2a2a2a;
+      border-color: #444;
+      color: #e0e0e0;
+      scrollbar-color: #555 #2a2a2a;
+    }
+    .preview-text::-webkit-scrollbar-track {
+      background: #2a2a2a;
+    }
+    .preview-text::-webkit-scrollbar-thumb {
+      background: #555;
+    }
+    .preview-text::-webkit-scrollbar-thumb:hover {
+      background: #666;
     }
   `;
 

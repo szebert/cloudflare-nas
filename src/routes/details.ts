@@ -13,6 +13,12 @@ export interface FileDetails {
   contentType: string | null;
   customMetadata: Record<string, string>;
   storageClass: string | null;
+  textContent?: string | null;
+  isTooLargeForTextPreview?: boolean;
+}
+
+function isImage(contentType: string | null): boolean {
+  return contentType !== null && contentType.startsWith("image/");
 }
 
 async function getFileDetails(
@@ -66,6 +72,35 @@ async function getFileDetails(
     const name = lastSlash >= 0 ? cleanPath.slice(lastSlash + 1) : cleanPath;
     const parentPath = lastSlash >= 0 ? cleanPath.slice(0, lastSlash + 1) : "";
 
+    const contentType = head.httpMetadata?.contentType || null;
+    let textContent: string | null = null;
+    let isTooLargeForTextPreview = false;
+
+    // Try to fetch text content for non-image files (images take priority)
+    // Only try for files up to 1MB to avoid memory issues
+    const MAX_TEXT_PREVIEW_SIZE = 1024 * 1024; // 1MB
+    if (!isImage(contentType)) {
+      if (head.size > MAX_TEXT_PREVIEW_SIZE) {
+        isTooLargeForTextPreview = true;
+      } else {
+        try {
+          const object = await bucket.get(cleanPath);
+          if (object && object.body) {
+            // Try to decode as text - if it fails, textContent stays null
+            const arrayBuffer = await object.arrayBuffer();
+            const decoder = new TextDecoder("utf-8", {
+              fatal: false,
+              ignoreBOM: false,
+            });
+            textContent = decoder.decode(arrayBuffer);
+          }
+        } catch (error) {
+          // If we can't read the file as text, just leave textContent as null
+          textContent = null;
+        }
+      }
+    }
+
     return {
       name,
       fullPath: cleanPath,
@@ -73,9 +108,11 @@ async function getFileDetails(
       isDirectory: false,
       size: head.size,
       modified: head.uploaded,
-      contentType: head.httpMetadata?.contentType || null,
+      contentType,
       customMetadata: head.customMetadata || {},
       storageClass: head.storageClass || null,
+      textContent,
+      isTooLargeForTextPreview,
     };
   }
 }
