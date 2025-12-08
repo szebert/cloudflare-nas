@@ -2,8 +2,7 @@ import type { Context } from "hono";
 import type { BucketInfo, Theme } from "../types";
 import { renderDetailsPage } from "../ui/details-page";
 import { getBucketByBinding } from "../utils/buckets";
-import { isImage } from "../utils/image-detection";
-import { isVideo } from "../utils/video-detection";
+import { detectContentType } from "../utils/mime-detection";
 
 const MAX_TEXT_PREVIEW_SIZE = 1024 * 1024; // 1MB
 
@@ -94,27 +93,23 @@ async function getFileDetails(
     // Skip preview for 0-byte files
     const isEmpty = head.size === 0;
 
-    // Check if it's a video first (priority: video > image > text)
+    // Check if it's a video or image (priority: video > image > text)
     let isVideoFile = false;
     let isImageFile = false;
     if (!isEmpty) {
-      isVideoFile = await isVideo(
+      const detectedType = await detectContentType({
         contentType,
-        name,
+        filePath: cleanPath,
         bucket,
-        cleanPath,
-        head.size
-      );
+        fileSize: head.size,
+      });
 
-      // Only check for image if it's not a video
-      if (!isVideoFile) {
-        isImageFile = await isImage(
-          contentType,
-          name,
-          bucket,
-          cleanPath,
-          head.size
-        );
+      if (detectedType) {
+        isVideoFile = detectedType.startsWith("video/");
+        // Only check for image if it's not a video
+        if (!isVideoFile) {
+          isImageFile = detectedType.startsWith("image/");
+        }
       }
     }
 

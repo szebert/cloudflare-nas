@@ -3,6 +3,7 @@ import type { BucketInfo } from "../types";
 import { getBucketByBinding } from "../utils/buckets";
 import { escapeXml } from "../utils/format";
 import { logger } from "../utils/logger";
+import { detectContentType } from "../utils/mime-detection";
 
 export async function webdavRoute(
   c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[] } }>
@@ -417,16 +418,8 @@ async function handlePut(c: Context, bucketInfo: BucketInfo, path: string) {
     const ifNoneMatch = c.req.header("If-None-Match");
     const ifMatch = c.req.header("If-Match");
     const contentLength = c.req.header("Content-Length");
-    const contentType =
+    let contentType =
       c.req.header("Content-Type") || "application/octet-stream";
-
-    log.debug("PUT start", {
-      path,
-      ifNoneMatch,
-      ifMatch,
-      contentLength,
-      contentType,
-    });
 
     // Check if file already exists
     const existing = await bucketInfo.bucket.head(path);
@@ -452,6 +445,30 @@ async function handlePut(c: Context, bucketInfo: BucketInfo, path: string) {
     // Read the request body (may be 0 bytes — that's fine)
     const body = await c.req.arrayBuffer();
     log.debug("PUT body length", { byteLength: body.byteLength });
+
+    // If Content-Type is generic or missing, detect from file content/extension
+    if (contentType === "application/octet-stream" || !contentType) {
+      const detected = await detectContentType({
+        contentType,
+        filePath: path,
+        bytes: body.byteLength > 0 ? body : undefined,
+      });
+      if (detected) {
+        contentType = detected;
+        log.debug("PUT detected content type", {
+          path,
+          detectedType: detected,
+        });
+      }
+    }
+
+    log.debug("PUT start", {
+      path,
+      ifNoneMatch,
+      ifMatch,
+      contentLength,
+      contentType,
+    });
 
     // Always allow PUT to overwrite (WebDAV standard behavior),
     // and always write the body, even if it's 0 bytes.
