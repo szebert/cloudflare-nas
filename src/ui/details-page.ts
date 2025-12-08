@@ -134,7 +134,11 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
       <div class="metadata-section-header">
         <h2>HTTP Metadata</h2>
         <div class="metadata-buttons">
-          <a href="#http-metadata-add-modal" class="btn btn-success">➕ Add</a>
+          ${
+            !isDirectory
+              ? `<a href="#http-metadata-add-modal" class="btn btn-success">➕ Add</a>`
+              : ""
+          }
           ${
             Object.keys(httpMetadata).length > 0
               ? `<a href="#http-metadata-edit-modal" class="btn btn-secondary">✏️ Edit</a>`
@@ -166,7 +170,11 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
       <div class="metadata-section-header">
         <h2>Custom Metadata</h2>
         <div class="metadata-buttons">
-          <a href="#metadata-add-modal" class="btn btn-success">➕ Add</a>
+          ${
+            !isDirectory
+              ? `<a href="#metadata-add-modal" class="btn btn-success">➕ Add</a>`
+              : ""
+          }
           ${
             Object.keys(customMetadata).length > 0
               ? `<a href="#metadata-edit-modal" class="btn btn-secondary">✏️ Edit</a>`
