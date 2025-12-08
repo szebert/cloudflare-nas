@@ -113,32 +113,26 @@ ${
       </tr>`
     : ""
 }
-${entries
-  .map((entry) => renderRow(entry, currentBucket, path, theme))
-  .join("\n")}
+${
+  entries.length === 0 && parentPath === null
+    ? `<tr>
+        <td class="name empty-message" colspan="5">This folder is empty</td>
+      </tr>`
+    : entries
+        .map((entry) => renderRow(entry, currentBucket, path, theme))
+        .join("\n")
+}
     </tbody>
   </table>
   </div>
   <hr>
   <div class="footer">
     <div class="footer-stats">
-      ${
-        dirCount > 0
-          ? `<span class="stat"><span class="stat-label">Folders:</span> ${dirCount}</span>`
-          : ""
-      }
-      ${
-        fileCount > 0
-          ? `<span class="stat"><span class="stat-label">Files:</span> ${fileCount}</span>`
-          : ""
-      }
-      ${
-        totalSize > 0
-          ? `<span class="stat"><span class="stat-label">Total:</span> ${formatSize(
-              totalSize
-            )}</span>`
-          : ""
-      }
+      <span class="stat"><span class="stat-label">Folders:</span> ${dirCount}</span>
+      <span class="stat"><span class="stat-label">Files:</span> ${fileCount}</span>
+      <span class="stat"><span class="stat-label">Total:</span> ${formatSize(
+        totalSize
+      )}</span>
     </div>
     <div class="footer-info">
       ${currentBucket.binding}

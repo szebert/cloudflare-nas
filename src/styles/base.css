@@ -13,6 +13,7 @@ body {
   display: flex;
   flex-direction: column;
   max-height: 100%;
+  box-sizing: border-box;
 }
 h1 {
   font-size: 1.275em;
@@ -46,14 +47,9 @@ hr {
 
 /* Table wrapper - shrinks and scrolls when content overflows */
 .table-wrapper {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   overflow-y: auto;
   min-height: 0;
-}
-
-/* Footer stays visible */
-.footer {
-  flex-shrink: 0;
 }
 
 /* Modal overlay using :target */
@@ -175,12 +171,12 @@ td.modified {
 }
 th.size,
 td.size {
-  width: 90px;
+  width: 70px;
   text-align: right;
 }
 th.details,
 td.details {
-  width: 40px;
+  width: 30px;
   text-align: center;
   padding-right: 0;
 }
@@ -189,6 +185,11 @@ td.name a {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+td.empty-message {
+  text-align: center;
+  padding: 2rem;
+  opacity: 0.7;
 }
 a {
   text-decoration: none;
@@ -276,12 +277,13 @@ a:hover {
 
 /* Footer */
 .footer {
-  margin-top: 20px;
+  margin-top: 15px;
   font-size: 12px;
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
+  flex-shrink: 0;
 }
 .footer-stats {
   display: flex;
@@ -551,7 +553,7 @@ a:hover {
   }
   th.modified,
   td.modified {
-    width: 85px;
+    width: 70px;
   }
   /* Hide ISO string on mobile, show date-only */
   .date-iso {
@@ -562,11 +564,11 @@ a:hover {
   }
   th.size,
   td.size {
-    width: 70px;
+    width: 65px;
   }
   th.details,
   td.details {
-    width: 32px;
+    width: 25px;
   }
   .switcher-btn {
     padding: 4px 8px;
@@ -638,5 +640,8 @@ a:hover {
   }
   .rename-form input[type="text"] {
     width: 100%;
+  }
+  .footer {
+    margin: 10px 0;
   }
 }
