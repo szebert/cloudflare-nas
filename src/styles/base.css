@@ -89,10 +89,12 @@ hr {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 3px;
   overflow: hidden;
 }
 .modal-form input[type="text"],
-.modal-form textarea {
+.modal-form textarea,
+.modal-form select {
   padding: 8px 12px;
   border-radius: 4px;
 }
@@ -394,6 +396,7 @@ a:hover {
   grid-template-columns: 1fr 1fr auto;
   gap: 8px;
   align-items: center;
+  margin: 1px;
 }
 .metadata-row-label {
   display: none;

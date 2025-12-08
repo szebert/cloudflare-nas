@@ -7,6 +7,15 @@ import { isVideo } from "../utils/video-detection";
 
 const MAX_TEXT_PREVIEW_SIZE = 1024 * 1024; // 1MB
 
+export interface HttpMetadata {
+  contentType?: string;
+  contentLanguage?: string;
+  contentDisposition?: string;
+  contentEncoding?: string;
+  cacheControl?: string;
+  cacheExpiry?: string; // ISO string format for display
+}
+
 export interface FileDetails {
   name: string;
   fullPath: string;
@@ -16,6 +25,7 @@ export interface FileDetails {
   modified: Date | null;
   contentType: string | null;
   customMetadata: Record<string, string>;
+  httpMetadata: HttpMetadata;
   storageClass: string | null;
   textContent?: string | null;
   isTooLargeForTextPreview?: boolean;
@@ -60,6 +70,7 @@ async function getFileDetails(
       modified: null, // Directories don't have a modified date in R2
       contentType: null,
       customMetadata: {},
+      httpMetadata: {},
       storageClass: null,
       canEditFile: false,
     };
@@ -138,6 +149,29 @@ async function getFileDetails(
       !isImageFile &&
       !isVideoFile;
 
+    // Extract httpMetadata, converting Date objects to ISO strings for cacheExpiry
+    const httpMetadata: HttpMetadata = {};
+    if (head.httpMetadata) {
+      if (head.httpMetadata.contentType) {
+        httpMetadata.contentType = head.httpMetadata.contentType;
+      }
+      if (head.httpMetadata.contentLanguage) {
+        httpMetadata.contentLanguage = head.httpMetadata.contentLanguage;
+      }
+      if (head.httpMetadata.contentDisposition) {
+        httpMetadata.contentDisposition = head.httpMetadata.contentDisposition;
+      }
+      if (head.httpMetadata.contentEncoding) {
+        httpMetadata.contentEncoding = head.httpMetadata.contentEncoding;
+      }
+      if (head.httpMetadata.cacheControl) {
+        httpMetadata.cacheControl = head.httpMetadata.cacheControl;
+      }
+      if (head.httpMetadata.cacheExpiry) {
+        httpMetadata.cacheExpiry = head.httpMetadata.cacheExpiry.toISOString();
+      }
+    }
+
     return {
       name,
       fullPath: cleanPath,
@@ -147,6 +181,7 @@ async function getFileDetails(
       modified: head.uploaded,
       contentType,
       customMetadata: head.customMetadata || {},
+      httpMetadata,
       storageClass: head.storageClass || null,
       textContent,
       isTooLargeForTextPreview,
@@ -224,6 +259,10 @@ export async function detailsHandlerRoute(
       return handleAddMetadata(c, bucketInfo, formData, theme);
     case "updateMetadata":
       return handleUpdateMetadata(c, bucketInfo, formData, theme);
+    case "addHttpMetadata":
+      return handleAddHttpMetadata(c, bucketInfo, formData, theme);
+    case "updateHttpMetadata":
+      return handleUpdateHttpMetadata(c, bucketInfo, formData, theme);
     case "edit":
       return handleEdit(c, bucketInfo, formData, theme);
     default:
@@ -501,6 +540,199 @@ async function handleUpdateMetadata(
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to update metadata: ${String(error)}`, 500);
+  }
+}
+
+async function handleAddHttpMetadata(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData,
+  theme: string
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+  const key = formData.get("httpMetadataKey") as string;
+  const value = formData.get("httpMetadataValue") as string;
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Metadata can only be updated for files, not directories
+  if (isDirectory) {
+    return c.text("Cannot update metadata for directories", 400);
+  }
+
+  // Validate key is one of the allowed httpMetadata fields
+  const allowedKeys = [
+    "contentType",
+    "contentLanguage",
+    "contentDisposition",
+    "contentEncoding",
+    "cacheControl",
+    "cacheExpiry",
+  ];
+  if (!key || !allowedKeys.includes(key)) {
+    return c.text("Invalid httpMetadata key", 400);
+  }
+
+  try {
+    // Get the current object
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Get existing httpMetadata and add/update the new entry
+    const existingHttpMetadata = object.httpMetadata || {};
+    const newHttpMetadata: typeof existingHttpMetadata = {
+      ...existingHttpMetadata,
+    };
+
+    // Handle cacheExpiry specially (it's a Date)
+    if (key === "cacheExpiry") {
+      if (value) {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+          return c.text("Invalid date format for cacheExpiry", 400);
+        }
+        newHttpMetadata.cacheExpiry = date;
+      } else {
+        // Remove cacheExpiry if empty
+        delete newHttpMetadata.cacheExpiry;
+      }
+    } else {
+      // For other fields, set as string or remove if empty
+      if (value) {
+        (newHttpMetadata as any)[key] = value;
+      } else {
+        delete (newHttpMetadata as any)[key];
+      }
+    }
+
+    // Update the object with new metadata
+    await bucketInfo.bucket.put(fullPath, object.body, {
+      httpMetadata: newHttpMetadata,
+      customMetadata: object.customMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to add httpMetadata: ${String(error)}`, 500);
+  }
+}
+
+async function handleUpdateHttpMetadata(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData,
+  theme: string
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Metadata can only be updated for files, not directories
+  if (isDirectory) {
+    return c.text("Cannot update metadata for directories", 400);
+  }
+
+  try {
+    // Parse all httpMetadata entries from form data
+    const metadataEntries: Array<{
+      key: string;
+      value: string;
+      delete: boolean;
+    }> = [];
+    let index = 0;
+
+    const allowedKeys = [
+      "contentType",
+      "contentLanguage",
+      "contentDisposition",
+      "contentEncoding",
+      "cacheControl",
+      "cacheExpiry",
+    ];
+
+    while (true) {
+      const key = formData.get(`httpMetadataKey_${index}`) as string | null;
+      const value = formData.get(`httpMetadataValue_${index}`) as string | null;
+      const deleteFlag = formData.get(`httpMetadataDelete_${index}`) === "true";
+
+      if (key === null && value === null) {
+        break; // No more entries
+      }
+
+      // Validate key is allowed
+      if (key && !allowedKeys.includes(key)) {
+        return c.text(`Invalid httpMetadata key: ${key}`, 400);
+      }
+
+      metadataEntries.push({
+        key: key ?? "",
+        value: value ?? "",
+        delete: deleteFlag,
+      });
+
+      index++;
+    }
+
+    // Get the current object
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Build the new httpMetadata object
+    const existingHttpMetadata = object.httpMetadata || {};
+    const newHttpMetadata: typeof existingHttpMetadata = {
+      ...existingHttpMetadata,
+    };
+
+    for (const entry of metadataEntries) {
+      if (entry.delete) {
+        // Remove the field
+        delete (newHttpMetadata as any)[entry.key];
+      } else if (entry.key) {
+        // Handle cacheExpiry specially (it's a Date)
+        if (entry.key === "cacheExpiry") {
+          if (entry.value) {
+            const date = new Date(entry.value);
+            if (isNaN(date.getTime())) {
+              return c.text("Invalid date format for cacheExpiry", 400);
+            }
+            newHttpMetadata.cacheExpiry = date;
+          } else {
+            delete newHttpMetadata.cacheExpiry;
+          }
+        } else {
+          // For other fields, set as string or remove if empty
+          if (entry.value) {
+            (newHttpMetadata as any)[entry.key] = entry.value;
+          } else {
+            delete (newHttpMetadata as any)[entry.key];
+          }
+        }
+      }
+    }
+
+    // Update the object with new metadata
+    await bucketInfo.bucket.put(fullPath, object.body, {
+      httpMetadata: newHttpMetadata,
+      customMetadata: object.customMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to update httpMetadata: ${String(error)}`, 500);
   }
 }
 

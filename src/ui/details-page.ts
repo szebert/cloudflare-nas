@@ -50,6 +50,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     modified,
     contentType,
     customMetadata,
+    httpMetadata,
     storageClass,
     textContent,
     isTooLargeForTextPreview,
@@ -127,6 +128,38 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
         <div class="detail-label">Size:</div>
         <div class="detail-value">${formatSize(size)}</div>
       </div>
+    </div>
+
+    <div class="metadata-section">
+      <div class="metadata-section-header">
+        <h2>HTTP Metadata</h2>
+        <div class="metadata-buttons">
+          <a href="#http-metadata-add-modal" class="btn btn-success">➕ Add</a>
+          ${
+            Object.keys(httpMetadata).length > 0
+              ? `<a href="#http-metadata-edit-modal" class="btn btn-secondary">✏️ Edit</a>`
+              : ""
+          }
+        </div>
+      </div>
+      ${
+        Object.keys(httpMetadata).length === 0
+          ? `<div class="metadata-empty">No HTTP metadata set</div>`
+          : `<div class="metadata-list">
+            ${Object.entries(httpMetadata)
+              .map(
+                ([key, value]) =>
+                  `<div class="metadata-item">
+                    <div class="detail-label">${escapeHtml(
+                      key
+                    )}:</div><div class="detail-value">${escapeHtml(
+                    value
+                  )}</div>
+                  </div>`
+              )
+              .join("")}
+          </div>`
+      }
     </div>
 
     <div class="metadata-section">
@@ -340,6 +373,112 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
                   )}" placeholder="Value" class="metadata-input">
                   <label class="metadata-delete-label">
                     <input type="checkbox" name="metadataDelete_${index}" value="true" class="metadata-delete-checkbox">
+                    <span class="metadata-delete-text">Delete</span>
+                  </label>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+          
+          <div class="modal-buttons">
+            <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-secondary">Save Metadata</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add HTTP Metadata Modal -->
+    <div id="http-metadata-add-modal" class="modal-overlay">
+      <div class="modal">
+        <h2>➕ Add HTTP Metadata</h2>
+        <form method="POST" class="modal-form" action="/b/${
+          bucketInfo.binding
+        }/details/${fullPath}${isDirectory ? "/" : ""}">
+          <input type="hidden" name="action" value="addHttpMetadata">
+          <input type="hidden" name="fullPath" value="${fullPath}">
+          <input type="hidden" name="isDirectory" value="${isDirectory}">
+          <input type="hidden" name="theme" value="${theme}">
+          
+          <div class="metadata-add-form">
+            <label>
+              <div class="metadata-label-text">Key</div>
+              <select name="httpMetadataKey" class="metadata-input" autofocus required>
+                <option value="">Select a field</option>
+                <option value="contentType">Content-Type</option>
+                <option value="contentLanguage">Content-Language</option>
+                <option value="contentDisposition">Content-Disposition</option>
+                <option value="contentEncoding">Content-Encoding</option>
+                <option value="cacheControl">Cache-Control</option>
+                <option value="cacheExpiry">Cache-Expiry</option>
+              </select>
+            </label>
+            <label>
+              <div class="metadata-label-text">Value</div>
+              <input type="text" name="httpMetadataValue" value="" placeholder="Enter metadata value (for cacheExpiry, use ISO date format)" class="metadata-input">
+            </label>
+          </div>
+          
+          <div class="modal-buttons">
+            <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-success">Add Metadata</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit HTTP Metadata Modal -->
+    <div id="http-metadata-edit-modal" class="modal-overlay">
+      <div class="modal modal-wide">
+        <h2>✏️ Edit HTTP Metadata</h2>
+        <form method="POST" class="modal-form" action="/b/${
+          bucketInfo.binding
+        }/details/${fullPath}${isDirectory ? "/" : ""}">
+          <input type="hidden" name="action" value="updateHttpMetadata">
+          <input type="hidden" name="fullPath" value="${fullPath}">
+          <input type="hidden" name="isDirectory" value="${isDirectory}">
+          <input type="hidden" name="theme" value="${theme}">
+          
+          <div class="metadata-editor">
+            <div class="metadata-editor-header">
+              <div class="metadata-editor-label">Key</div>
+              <div class="metadata-editor-label">Value</div>
+              <div class="metadata-editor-label">Delete</div>
+            </div>
+            <div class="metadata-editor-scrollable">
+              ${Object.entries(httpMetadata)
+                .map(
+                  ([key, value], index) => `
+                <div class="metadata-editor-row">
+                  <div class="metadata-row-label">Key</div>
+                  <select name="httpMetadataKey_${index}" class="metadata-input">
+                    <option value="contentType" ${
+                      key === "contentType" ? "selected" : ""
+                    }>Content-Type</option>
+                    <option value="contentLanguage" ${
+                      key === "contentLanguage" ? "selected" : ""
+                    }>Content-Language</option>
+                    <option value="contentDisposition" ${
+                      key === "contentDisposition" ? "selected" : ""
+                    }>Content-Disposition</option>
+                    <option value="contentEncoding" ${
+                      key === "contentEncoding" ? "selected" : ""
+                    }>Content-Encoding</option>
+                    <option value="cacheControl" ${
+                      key === "cacheControl" ? "selected" : ""
+                    }>Cache-Control</option>
+                    <option value="cacheExpiry" ${
+                      key === "cacheExpiry" ? "selected" : ""
+                    }>Cache-Expiry</option>
+                  </select>
+                  <div class="metadata-row-label">Value</div>
+                  <input type="text" name="httpMetadataValue_${index}" value="${escapeHtml(
+                    value
+                  )}" placeholder="Value (for cacheExpiry, use ISO date format)" class="metadata-input">
+                  <label class="metadata-delete-label">
+                    <input type="checkbox" name="httpMetadataDelete_${index}" value="true" class="metadata-delete-checkbox">
                     <span class="metadata-delete-text">Delete</span>
                   </label>
                 </div>
