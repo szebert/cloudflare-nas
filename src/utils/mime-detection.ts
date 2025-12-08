@@ -3,6 +3,8 @@
  * Detects content types from file content (magic bytes) and file extensions.
  */
 
+import type { StorageBucket } from "../storage/interface";
+
 interface DetectContentTypeOptions {
   /** Current content type (if known) - will be used if not generic */
   contentType?: string | null;
@@ -10,8 +12,8 @@ interface DetectContentTypeOptions {
   filePath: string;
   /** File bytes for magic byte detection (for uploads) */
   bytes?: Uint8Array | ArrayBuffer;
-  /** R2Bucket instance for reading existing files */
-  bucket?: R2Bucket;
+  /** StorageBucket instance for reading existing files */
+  bucket?: StorageBucket;
   /** File size (needed when using bucket) */
   fileSize?: number;
 }

@@ -1,7 +1,8 @@
+import { createR2StorageBucket } from "../storage/r2-adapter";
 import type { BucketInfo } from "../types";
 
 /**
- * Dynamically discover R2 buckets from the environment
+ * Dynamically discover R2 buckets from the environment and wrap them in storage adapters
  */
 export function discoverBuckets(env: Env): BucketInfo[] {
   const buckets: BucketInfo[] = [];
@@ -10,7 +11,7 @@ export function discoverBuckets(env: Env): BucketInfo[] {
     if (isR2Bucket(value)) {
       buckets.push({
         binding: key,
-        bucket: value,
+        bucket: createR2StorageBucket(value),
       });
     }
   }

@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import { html } from "hono/html";
+import type { StorageBucket } from "../storage/interface";
 import type {
   BucketInfo,
   FileEntry,
@@ -78,7 +79,7 @@ export async function browseRoute(
 }
 
 async function listDirectory(
-  bucket: R2Bucket,
+  bucket: StorageBucket,
   prefix: string
 ): Promise<FileEntry[]> {
   const entries: FileEntry[] = [];

@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import type { StorageBucket } from "../storage/interface";
 import type { BucketInfo, Theme } from "../types";
 import { renderDetailsPage } from "../ui/details-page";
 import { getBucketByBinding } from "../utils/buckets";
@@ -34,7 +35,7 @@ export interface FileDetails {
 }
 
 async function getFileDetails(
-  bucket: R2Bucket,
+  bucket: StorageBucket,
   filePath: string
 ): Promise<FileDetails | null> {
   const isDirectory = filePath.endsWith("/");
@@ -138,11 +139,7 @@ async function getFileDetails(
     }
 
     const canEditFile =
-      textContent !== null &&
-      textContent !== undefined &&
-      !isTooLargeForTextPreview &&
-      !isImageFile &&
-      !isVideoFile;
+      !isDirectory && !isTooLargeForTextPreview && !isImageFile && !isVideoFile;
 
     // Extract httpMetadata, converting Date objects to ISO strings for cacheExpiry
     const httpMetadata: HttpMetadata = {};

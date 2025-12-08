@@ -1,3 +1,5 @@
+import type { StorageBucket } from "./storage/interface";
+
 export type Theme = "light" | "dark" | "system";
 export type SortField = "name" | "type" | "modified" | "size";
 export type SortOrder = "asc" | "desc";
@@ -12,7 +14,7 @@ export interface FileEntry {
 
 export interface BucketInfo {
   binding: string;
-  bucket: R2Bucket;
+  bucket: StorageBucket;
 }
 
 export interface ListingOptions {
