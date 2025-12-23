@@ -1,7 +1,11 @@
 import type { FileDetails } from "../routes/details";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatDateUTC, formatSize } from "../utils/format";
-import { renderLogoutButton, renderThemeSwitcher } from "./components";
+import {
+  renderHead,
+  renderLogoutButton,
+  renderThemeSwitcher,
+} from "./components";
 
 export interface DetailsPageOptions {
   bucketInfo: BucketInfo;
@@ -82,13 +86,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${name} - Details</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="/style.css?theme=${theme}">
-</head>
+${renderHead({ title: `${name} - Details`, theme })}
 <body>
   <div class="header">
     <h1>Details of ${displayPath}</h1>

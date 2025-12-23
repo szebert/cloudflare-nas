@@ -11,6 +11,7 @@ import {
 } from "../utils/format";
 import {
   renderBucketSwitcher,
+  renderHead,
   renderLogoutButton,
   renderNewMenu,
   renderThemeSwitcher,
@@ -43,13 +44,10 @@ export function renderListing(options: ListingOptions): string {
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${currentBucket.binding} - ${displayPath}</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="/style.css?theme=${theme}">
-</head>
+${renderHead({
+  title: `${currentBucket.binding} - ${displayPath}`,
+  theme,
+})}
 <body>
   <div class="header">
     <h1>Index of ${displayPath}</h1>

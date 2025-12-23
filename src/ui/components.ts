@@ -1,5 +1,20 @@
 import type { BucketInfo, Theme } from "../types";
 
+export function renderHead(options: { title: string; theme: Theme }): string {
+  const { title, theme } = options;
+  const darkReaderMeta =
+    theme === "dark" ? `<meta name="darkreader-lock">` : "";
+
+  return `<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  ${darkReaderMeta}
+  <title>${title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css?theme=${theme}">
+</head>`;
+}
+
 export function renderThemeSwitcher(
   bucket: BucketInfo,
   path: string,
