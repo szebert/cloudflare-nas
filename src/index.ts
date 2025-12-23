@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { basicAuth } from "hono/basic-auth";
+import { authMiddleware } from "./auth/middleware";
+import { loginHandlerRoute, loginPageRoute, logoutRoute } from "./routes/auth";
 import { browseRoute } from "./routes/browse";
 import { detailsHandlerRoute, detailsPageRoute } from "./routes/details";
 import { downloadRoute } from "./routes/download";
@@ -9,28 +10,19 @@ import { createFolderRoute } from "./routes/folder";
 import { stylesRoute } from "./routes/styles";
 import { uploadFilesRoute, uploadFolderRoute } from "./routes/upload";
 import { webdavRoute } from "./routes/webdav";
-import type { BucketInfo } from "./types";
+import type { BucketInfo, User } from "./types";
 import { discoverBuckets } from "./utils/buckets";
 import { initLogger } from "./utils/logger";
 
 const app = new Hono<{
   Bindings: Env;
-  Variables: { buckets: BucketInfo[] };
+  Variables: { buckets: BucketInfo[]; user?: User };
 }>();
 
 // Initialize our global structured logger once per request
 app.use("*", async (c, next) => {
   initLogger(c.env);
   await next();
-});
-
-// Basic authentication using env vars
-app.use("*", async (c, next) => {
-  const auth = basicAuth({
-    username: c.env.AUTH_USERNAME,
-    password: c.env.AUTH_PASSWORD,
-  });
-  return auth(c, next);
 });
 
 // Discover buckets dynamically
@@ -52,8 +44,13 @@ app.get("/favicon.ico", (c) => {
 
 app.get("/favicon.svg", faviconRoute);
 
-// Root redirect to first bucket
-app.get("/", (c) => {
+// Auth routes (no auth required)
+app.get("/login", loginPageRoute);
+app.post("/login", loginHandlerRoute);
+app.post("/logout", logoutRoute);
+
+// Root redirect to first bucket (requires auth)
+app.get("/", authMiddleware, (c) => {
   const buckets = c.get("buckets");
   if (buckets.length === 0) {
     return c.text("No R2 buckets configured", 500);
@@ -62,8 +59,12 @@ app.get("/", (c) => {
 });
 
 // WebDAV routes for mounting as network drive (must be before other routes)
-app.all("/webdav/:bucket/*", webdavRoute);
-app.all("/webdav/:bucket", webdavRoute);
+// WebDAV uses Basic Auth validated against D1
+app.all("/webdav/:bucket/*", authMiddleware, webdavRoute);
+app.all("/webdav/:bucket", authMiddleware, webdavRoute);
+
+// All other routes require authentication
+app.use("/b/*", authMiddleware);
 
 // Download files from bucket
 app.get("/b/:bucket/download/*", downloadRoute);

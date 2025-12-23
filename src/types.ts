@@ -27,3 +27,19 @@ export interface ListingOptions {
   currentBucket: BucketInfo;
   totalSize: number;
 }
+
+export interface User {
+  id: string;
+  username: string;
+  is_admin: boolean;
+}
+
+export interface Share {
+  id: string;
+  slug: string;
+  r2_bucket: string;
+  r2_prefix: string;
+  owner_user_id: string;
+  quota_bytes: number | null;
+  created_at: number;
+}

@@ -158,26 +158,39 @@ The WebDAV implementation supports:
    }
    ```
 
-4. **Set authentication credentials** in `.dev.vars` (for local dev):
-
-   ```
-   AUTH_USERNAME=admin
-   AUTH_PASSWORD=your-secure-password
-   ```
-
-   For production, set these as secrets:
+4. **Set up D1 database:**
 
    ```bash
-   npx wrangler secret put AUTH_PASSWORD
+   # Create the D1 database
+   npx wrangler d1 create nas-db
+
+   # Update wrangler.json with the database_id from the output above
+   # Then run the schema
+   npx wrangler d1 execute nas-db --file=schema.sql
    ```
 
-5. **Run locally:**
+5. **Create the first admin user:**
+
+   ```bash
+   # Install tsx if not already installed
+   npm install --save-dev tsx
+
+   # Generate SQL for creating an admin user
+   npm run create-admin admin your-secure-password
+
+   # Copy the generated SQL and run it:
+   npx wrangler d1 execute nas-db --command="<paste SQL here>"
+   ```
+
+   Or manually create a user via the Cloudflare dashboard or D1 console.
+
+6. **Run locally:**
 
    ```bash
    npm run dev
    ```
 
-6. **Deploy:**
+7. **Deploy:**
    ```bash
    npm run deploy
    ```

@@ -237,7 +237,7 @@ a:hover {
   position: relative;
   display: inline-block;
 }
-.switcher-btn {
+.action-btn {
   padding: 4px 10px;
   font-size: 13px;
   gap: 4px;
@@ -570,7 +570,7 @@ a:hover {
   td.details {
     width: 25px;
   }
-  .switcher-btn {
+  .action-btn {
     padding: 4px 8px;
     font-size: 12px;
   }
@@ -644,4 +644,57 @@ a:hover {
   .footer {
     margin: 10px 0;
   }
+}
+
+/* Login page styles */
+.login-container {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 30px;
+  border-radius: 8px;
+}
+.login-container h1 {
+  text-align: center;
+}
+.login-subtitle {
+  text-align: center;
+  opacity: 0.7;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.login-form > button {
+  margin-top: 8px;
+  height: 38px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group label {
+  font-weight: 500;
+  font-size: 13px;
+}
+.form-group input[type="text"],
+.form-group input[type="password"] {
+  padding: 10px 12px;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 14px;
+}
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus {
+  outline: 2px solid;
+  outline-offset: 2px;
+}
+.error-message {
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  background-color: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #dc3545;
 }

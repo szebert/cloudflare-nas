@@ -18,11 +18,11 @@ a {
 .footer {
   color: #888;
 }
-.switcher-btn {
+.action-btn {
   background: #333;
   color: #e0e0e0;
 }
-.switcher-btn:hover {
+.action-btn:hover {
   background: #444;
 }
 .popup-menu {
@@ -162,4 +162,8 @@ a {
 }
 .preview-text {
   scrollbar-color: #555 #2a2a2a;
+}
+.login-container {
+  background: #2a2a2a;
+  border: 1px solid #444;
 }

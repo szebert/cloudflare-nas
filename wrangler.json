@@ -22,6 +22,13 @@
       "preview_bucket_name": "r2-bucket"
     }
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nas-db",
+      "database_id": "b0e3b308-8ab2-446d-b275-37f05515e57a"
+    }
+  ],
   "observability": {
     "enabled": true
   },

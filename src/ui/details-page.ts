@@ -1,7 +1,7 @@
 import type { FileDetails } from "../routes/details";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatDateUTC, formatSize } from "../utils/format";
-import { renderThemeSwitcher } from "./components";
+import { renderLogoutButton, renderThemeSwitcher } from "./components";
 
 export interface DetailsPageOptions {
   bucketInfo: BucketInfo;
@@ -78,6 +78,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     isDetailsPage: true,
     isDirectory,
   });
+  const logoutButton = renderLogoutButton();
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -93,6 +94,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     <h1>Details of ${displayPath}</h1>
     <div class="header-controls">
       ${themeSwitcher}
+      ${logoutButton}
     </div>
   </div>
   <hr>

@@ -11,6 +11,7 @@ import {
 } from "../utils/format";
 import {
   renderBucketSwitcher,
+  renderLogoutButton,
   renderNewMenu,
   renderThemeSwitcher,
 } from "./components";
@@ -37,6 +38,7 @@ export function renderListing(options: ListingOptions): string {
 
   const bucketSwitcher = renderBucketSwitcher(buckets, currentBucket, theme);
   const themeSwitcher = renderThemeSwitcher(currentBucket, path, theme);
+  const logoutButton = renderLogoutButton();
   const newMenu = renderNewMenu();
 
   return `<!DOCTYPE html>
@@ -55,6 +57,7 @@ export function renderListing(options: ListingOptions): string {
       ${newMenu}
       ${bucketSwitcher}
       ${themeSwitcher}
+      ${logoutButton}
     </div>
   </div>
   <hr>
