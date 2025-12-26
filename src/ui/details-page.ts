@@ -3,8 +3,6 @@ import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatDateUTC, formatSize } from "../utils/format";
 import {
   renderHead,
-  renderLogoutButton,
-  renderThemeSwitcher,
 } from "./components";
 
 export interface DetailsPageOptions {
@@ -16,8 +14,7 @@ export interface DetailsPageOptions {
 
 function buildBreadcrumbs(
   bucketBinding: string,
-  fullPath: string,
-  theme: Theme
+  fullPath: string
 ): string {
   const parts = fullPath ? fullPath.split("/").filter((p) => p) : [];
   const breadcrumbs: Array<{ name: string; path: string }> = [
@@ -38,7 +35,7 @@ function buildBreadcrumbs(
       if (i === breadcrumbs.length - 1) {
         return `<span>${b.name}</span>`;
       }
-      return `<a href="${b.path}?theme=${theme}">${b.name}</a>`;
+      return `<a href="${b.path}">${b.name}</a>`;
     })
     .join(" / ");
 }
@@ -63,10 +60,8 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
     canEditFile,
   } = fileDetails;
 
-  const breadcrumbs = buildBreadcrumbs(bucketInfo.binding, fullPath, theme);
-  const currentDetailsUrl = `/b/${bucketInfo.binding}/details/${fullPath}${
-    isDirectory ? "/" : ""
-  }?theme=${theme}`;
+  const breadcrumbs = buildBreadcrumbs(bucketInfo.binding, fullPath);
+  const currentDetailsUrl = `/b/${bucketInfo.binding}/details/${fullPath}${isDirectory ? "/" : ""}`;
 
   const downloadUrl = `/b/${bucketInfo.binding}/download/${fullPath}`;
   const videoUrl = isVideoFile
@@ -78,11 +73,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
   const deleteModalId = `delete-${fullPath.replace(/[^a-zA-Z0-9]/g, "-")}`;
 
   const displayPath = "/" + (fullPath || "");
-  const themeSwitcher = renderThemeSwitcher(bucketInfo, fullPath, theme, {
-    isDetailsPage: true,
-    isDirectory,
-  });
-  const logoutButton = renderLogoutButton();
+  const settingsLink = `<a href="/b/${bucketInfo.binding}/settings" class="btn action-btn">⚙️ Settings</a>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -91,8 +82,7 @@ ${renderHead({ title: `${name} - Details`, theme })}
   <div class="header">
     <h1>Details of ${displayPath}</h1>
     <div class="header-controls">
-      ${themeSwitcher}
-      ${logoutButton}
+      ${settingsLink}
     </div>
   </div>
   <hr>
@@ -102,16 +92,14 @@ ${renderHead({ title: `${name} - Details`, theme })}
     </div>
 
     <div class="action-buttons">
-      ${
-        !isDirectory
-          ? `<a href="${downloadUrl}?theme=${theme}" class="btn btn-primary">⬇️ Download</a>`
-          : ""
-      }
-      ${
-        canEditFile
-          ? `<a href="#edit-file-modal" class="btn btn-secondary">✏️ Edit</a>`
-          : ""
-      }
+      ${!isDirectory
+      ? `<a href="${downloadUrl}" class="btn btn-primary">⬇️ Download</a>`
+      : ""
+    }
+      ${canEditFile
+      ? `<a href="#edit-file-modal" class="btn btn-secondary">✏️ Edit</a>`
+      : ""
+    }
       <a href="#move-rename-modal" class="btn btn-secondary">📦 Move/Rename</a>
       <a href="#${deleteModalId}" class="btn btn-delete">🗑️ Delete</a>
     </div>
@@ -134,109 +122,101 @@ ${renderHead({ title: `${name} - Details`, theme })}
       <div class="metadata-section-header">
         <h2>HTTP Metadata</h2>
         <div class="metadata-buttons">
-          ${
-            !isDirectory
-              ? `<a href="#http-metadata-add-modal" class="btn btn-success">➕ Add</a>`
-              : ""
-          }
-          ${
-            Object.keys(httpMetadata).length > 0
-              ? `<a href="#http-metadata-edit-modal" class="btn btn-secondary">✏️ Edit</a>`
-              : ""
-          }
+          ${!isDirectory
+      ? `<a href="#http-metadata-add-modal" class="btn btn-success">➕ Add</a>`
+      : ""
+    }
+          ${Object.keys(httpMetadata).length > 0
+      ? `<a href="#http-metadata-edit-modal" class="btn btn-secondary">✏️ Edit</a>`
+      : ""
+    }
         </div>
       </div>
-      ${
-        Object.keys(httpMetadata).length === 0
-          ? `<div class="metadata-empty">No HTTP metadata set</div>`
-          : `<div class="metadata-list">
+      ${Object.keys(httpMetadata).length === 0
+      ? `<div class="metadata-empty">No HTTP metadata set</div>`
+      : `<div class="metadata-list">
             ${Object.entries(httpMetadata)
-              .map(
-                ([key, value]) =>
-                  `<div class="metadata-item">
+        .map(
+          ([key, value]) =>
+            `<div class="metadata-item">
                     <div class="detail-label">${escapeHtml(
-                      key
-                    )}:</div><div class="detail-value">${escapeHtml(
-                    value
-                  )}</div>
+              key
+            )}:</div><div class="detail-value">${escapeHtml(
+              value
+            )}</div>
                   </div>`
-              )
-              .join("")}
+        )
+        .join("")}
           </div>`
-      }
+    }
     </div>
 
     <div class="metadata-section">
       <div class="metadata-section-header">
         <h2>Custom Metadata</h2>
         <div class="metadata-buttons">
-          ${
-            !isDirectory
-              ? `<a href="#metadata-add-modal" class="btn btn-success">➕ Add</a>`
-              : ""
-          }
-          ${
-            Object.keys(customMetadata).length > 0
-              ? `<a href="#metadata-edit-modal" class="btn btn-secondary">✏️ Edit</a>`
-              : ""
-          }
+          ${!isDirectory
+      ? `<a href="#metadata-add-modal" class="btn btn-success">➕ Add</a>`
+      : ""
+    }
+          ${Object.keys(customMetadata).length > 0
+      ? `<a href="#metadata-edit-modal" class="btn btn-secondary">✏️ Edit</a>`
+      : ""
+    }
         </div>
       </div>
-      ${
-        Object.keys(customMetadata).length === 0
-          ? `<div class="metadata-empty">No custom metadata set</div>`
-          : `<div class="metadata-list">
+      ${Object.keys(customMetadata).length === 0
+      ? `<div class="metadata-empty">No custom metadata set</div>`
+      : `<div class="metadata-list">
             ${Object.entries(customMetadata)
-              .map(
-                ([key, value]) =>
-                  `<div class="metadata-item">
+        .map(
+          ([key, value]) =>
+            `<div class="metadata-item">
                     <div class="detail-label">${escapeHtml(
-                      key
-                    )}:</div><div class="detail-value">${escapeHtml(
-                    value
-                  )}</div>
+              key
+            )}:</div><div class="detail-value">${escapeHtml(
+              value
+            )}</div>
                   </div>`
-              )
-              .join("")}
+        )
+        .join("")}
           </div>`
-      }
+    }
     </div>
 
-    ${
-      !isDirectory
-        ? `
+    ${!isDirectory
+      ? `
     <div class="preview-section">
       <h2>Object Preview</h2>
-      ${
-        size === 0
-          ? `
+      ${size === 0
+        ? `
       <div class="preview-container">
         <div class="preview-unsupported">File is empty (0 bytes). No preview available.</div>
       </div>
       `
-          : videoUrl
+        : videoUrl
           ? `
       <div class="preview-container">
         <video src="${videoUrl}" controls class="preview-video">Your browser does not support the video tag.</video>
       </div>
       `
           : imageUrl
-          ? `
+            ? `
       <div class="preview-container">
         <img src="${imageUrl}" alt="${name}" class="preview-image" />
       </div>
       `
-          : textContent !== null && textContent !== undefined
-          ? `
+            : textContent !== null && textContent !== undefined
+              ? `
       <pre class="preview-text">${escapeHtml(textContent)}</pre>
       `
-          : isTooLargeForTextPreview
-          ? `
+              : isTooLargeForTextPreview
+                ? `
       <div class="preview-container">
         <div class="preview-unsupported">File is too large to preview (over 1MB). Please download to view.</div>
       </div>
       `
-          : `
+                : `
       <div class="preview-container">
         <div class="preview-unsupported">Preview not available for this file type</div>
       </div>
@@ -244,25 +224,21 @@ ${renderHead({ title: `${name} - Details`, theme })}
       }
     </div>
     `
-        : ""
+      : ""
     }
 
-    ${
-      canEditFile
-        ? `
+    ${canEditFile
+      ? `
     <!-- Edit File Modal -->
     <div id="edit-file-modal" class="modal-overlay">
       <div class="modal modal-wide">
         <h2>✏️ Edit File</h2>
-        <form class="modal-form" method="POST" action="/b/${
-          bucketInfo.binding
-        }/details/${fullPath}">
+        <form class="modal-form" method="POST" action="/b/${bucketInfo.binding}/details/${fullPath}">
           <input type="hidden" name="action" value="edit">
           <input type="hidden" name="fullPath" value="${fullPath}">
-          <input type="hidden" name="theme" value="${theme}">
           <textarea name="content" placeholder="File content" rows="12" required autofocus>${escapeHtml(
-            textContent || ""
-          )}</textarea>
+        textContent || ""
+      )}</textarea>
           <div class="modal-buttons">
             <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
             <button type="submit" class="btn btn-success">Save</button>
@@ -271,20 +247,17 @@ ${renderHead({ title: `${name} - Details`, theme })}
       </div>
     </div>
     `
-        : ""
+      : ""
     }
 
     <!-- Move/Rename Modal -->
     <div id="move-rename-modal" class="modal-overlay">
       <div class="modal modal-wide">
         <h2>📦 Move and/or Rename</h2>
-        <form class="modal-form" method="POST" action="/b/${
-          bucketInfo.binding
-        }/details/${fullPath}${isDirectory ? "/" : ""}">
+        <form class="modal-form" method="POST" action="/b/${bucketInfo.binding}/details/${fullPath}${isDirectory ? "/" : ""}">
           <input type="hidden" name="action" value="rename">
           <input type="hidden" name="oldFullPath" value="${fullPath}">
           <input type="hidden" name="isDirectory" value="${isDirectory}">
-          <input type="hidden" name="theme" value="${theme}">
           <input type="text" name="newFullPath" value="${fullPath}" placeholder="Enter new path" required autofocus>
           <div class="modal-buttons">
             <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
@@ -298,17 +271,13 @@ ${renderHead({ title: `${name} - Details`, theme })}
     <div id="${deleteModalId}" class="modal-overlay">
       <div class="modal">
         <h2>🗑️ Delete ${isDirectory ? "Folder" : "File"}</h2>
-        <p>Are you sure you want to delete <strong>${name}</strong>?${
-    isDirectory ? " This will delete the folder and all its contents." : ""
-  } This action cannot be undone.</p>
-        <form method="POST" class="modal-form" action="/b/${
-          bucketInfo.binding
-        }/details/${fullPath}${isDirectory ? "/" : ""}">
+        <p>Are you sure you want to delete <strong>${name}</strong>?${isDirectory ? " This will delete the folder and all its contents." : ""
+    } This action cannot be undone.</p>
+        <form method="POST" class="modal-form" action="/b/${bucketInfo.binding}/details/${fullPath}${isDirectory ? "/" : ""}">
           <input type="hidden" name="action" value="delete">
           <input type="hidden" name="parentPath" value="${parentPath}">
           <input type="hidden" name="name" value="${name}">
           <input type="hidden" name="isDirectory" value="${isDirectory}">
-          <input type="hidden" name="theme" value="${theme}">
           <div class="modal-buttons">
             <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
             <button type="submit" class="btn btn-delete">Delete</button>
@@ -321,13 +290,10 @@ ${renderHead({ title: `${name} - Details`, theme })}
     <div id="metadata-add-modal" class="modal-overlay">
       <div class="modal">
         <h2>➕ Add Custom Metadata</h2>
-        <form method="POST" class="modal-form" action="/b/${
-          bucketInfo.binding
-        }/details/${fullPath}${isDirectory ? "/" : ""}">
+        <form method="POST" class="modal-form" action="/b/${bucketInfo.binding}/details/${fullPath}${isDirectory ? "/" : ""}">
           <input type="hidden" name="action" value="addMetadata">
           <input type="hidden" name="fullPath" value="${fullPath}">
           <input type="hidden" name="isDirectory" value="${isDirectory}">
-          <input type="hidden" name="theme" value="${theme}">
           
           <div class="metadata-add-form">
             <label>
@@ -352,13 +318,10 @@ ${renderHead({ title: `${name} - Details`, theme })}
     <div id="metadata-edit-modal" class="modal-overlay">
       <div class="modal modal-wide">
         <h2>✏️ Edit Custom Metadata</h2>
-        <form method="POST" class="modal-form" action="/b/${
-          bucketInfo.binding
-        }/details/${fullPath}${isDirectory ? "/" : ""}">
+        <form method="POST" class="modal-form" action="/b/${bucketInfo.binding}/details/${fullPath}${isDirectory ? "/" : ""}">
           <input type="hidden" name="action" value="updateMetadata">
           <input type="hidden" name="fullPath" value="${fullPath}">
           <input type="hidden" name="isDirectory" value="${isDirectory}">
-          <input type="hidden" name="theme" value="${theme}">
           
           <div class="metadata-editor">
             <div class="metadata-editor-header">
@@ -368,25 +331,25 @@ ${renderHead({ title: `${name} - Details`, theme })}
             </div>
             <div class="metadata-editor-scrollable">
               ${Object.entries(customMetadata)
-                .map(
-                  ([key, value], index) => `
+      .map(
+        ([key, value], index) => `
                 <div class="metadata-editor-row">
                   <div class="metadata-row-label">Key</div>
                   <input type="text" name="metadataKey_${index}" value="${escapeHtml(
-                    key
-                  )}" placeholder="Key" class="metadata-input">
+          key
+        )}" placeholder="Key" class="metadata-input">
                   <div class="metadata-row-label">Value</div>
                   <input type="text" name="metadataValue_${index}" value="${escapeHtml(
-                    value
-                  )}" placeholder="Value" class="metadata-input">
+          value
+        )}" placeholder="Value" class="metadata-input">
                   <label class="metadata-delete-label">
                     <input type="checkbox" name="metadataDelete_${index}" value="true" class="metadata-delete-checkbox">
                     <span class="metadata-delete-text">Delete</span>
                   </label>
                 </div>
               `
-                )
-                .join("")}
+      )
+      .join("")}
             </div>
           </div>
           
@@ -402,13 +365,10 @@ ${renderHead({ title: `${name} - Details`, theme })}
     <div id="http-metadata-add-modal" class="modal-overlay">
       <div class="modal">
         <h2>➕ Add HTTP Metadata</h2>
-        <form method="POST" class="modal-form" action="/b/${
-          bucketInfo.binding
-        }/details/${fullPath}${isDirectory ? "/" : ""}">
+        <form method="POST" class="modal-form" action="/b/${bucketInfo.binding}/details/${fullPath}${isDirectory ? "/" : ""}">
           <input type="hidden" name="action" value="addHttpMetadata">
           <input type="hidden" name="fullPath" value="${fullPath}">
           <input type="hidden" name="isDirectory" value="${isDirectory}">
-          <input type="hidden" name="theme" value="${theme}">
           
           <div class="metadata-add-form">
             <label>
@@ -441,13 +401,10 @@ ${renderHead({ title: `${name} - Details`, theme })}
     <div id="http-metadata-edit-modal" class="modal-overlay">
       <div class="modal modal-wide">
         <h2>✏️ Edit HTTP Metadata</h2>
-        <form method="POST" class="modal-form" action="/b/${
-          bucketInfo.binding
-        }/details/${fullPath}${isDirectory ? "/" : ""}">
+        <form method="POST" class="modal-form" action="/b/${bucketInfo.binding}/details/${fullPath}${isDirectory ? "/" : ""}">
           <input type="hidden" name="action" value="updateHttpMetadata">
           <input type="hidden" name="fullPath" value="${fullPath}">
           <input type="hidden" name="isDirectory" value="${isDirectory}">
-          <input type="hidden" name="theme" value="${theme}">
           
           <div class="metadata-editor">
             <div class="metadata-editor-header">
@@ -457,42 +414,36 @@ ${renderHead({ title: `${name} - Details`, theme })}
             </div>
             <div class="metadata-editor-scrollable">
               ${Object.entries(httpMetadata)
-                .map(
-                  ([key, value], index) => `
+      .map(
+        ([key, value], index) => `
                 <div class="metadata-editor-row">
                   <div class="metadata-row-label">Key</div>
                   <select name="httpMetadataKey_${index}" class="metadata-input">
-                    <option value="contentType" ${
-                      key === "contentType" ? "selected" : ""
-                    }>Content-Type</option>
-                    <option value="contentLanguage" ${
-                      key === "contentLanguage" ? "selected" : ""
-                    }>Content-Language</option>
-                    <option value="contentDisposition" ${
-                      key === "contentDisposition" ? "selected" : ""
-                    }>Content-Disposition</option>
-                    <option value="contentEncoding" ${
-                      key === "contentEncoding" ? "selected" : ""
-                    }>Content-Encoding</option>
-                    <option value="cacheControl" ${
-                      key === "cacheControl" ? "selected" : ""
-                    }>Cache-Control</option>
-                    <option value="cacheExpiry" ${
-                      key === "cacheExpiry" ? "selected" : ""
-                    }>Cache-Expiry</option>
+                    <option value="contentType" ${key === "contentType" ? "selected" : ""
+          }>Content-Type</option>
+                    <option value="contentLanguage" ${key === "contentLanguage" ? "selected" : ""
+          }>Content-Language</option>
+                    <option value="contentDisposition" ${key === "contentDisposition" ? "selected" : ""
+          }>Content-Disposition</option>
+                    <option value="contentEncoding" ${key === "contentEncoding" ? "selected" : ""
+          }>Content-Encoding</option>
+                    <option value="cacheControl" ${key === "cacheControl" ? "selected" : ""
+          }>Cache-Control</option>
+                    <option value="cacheExpiry" ${key === "cacheExpiry" ? "selected" : ""
+          }>Cache-Expiry</option>
                   </select>
                   <div class="metadata-row-label">Value</div>
                   <input type="text" name="httpMetadataValue_${index}" value="${escapeHtml(
-                    value
-                  )}" placeholder="Value (for cacheExpiry, use ISO date format)" class="metadata-input">
+            value
+          )}" placeholder="Value (for cacheExpiry, use ISO date format)" class="metadata-input">
                   <label class="metadata-delete-label">
                     <input type="checkbox" name="httpMetadataDelete_${index}" value="true" class="metadata-delete-checkbox">
                     <span class="metadata-delete-text">Delete</span>
                   </label>
                 </div>
               `
-                )
-                .join("")}
+      )
+      .join("")}
             </div>
           </div>
           

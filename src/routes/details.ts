@@ -1,9 +1,10 @@
 import type { Context } from "hono";
 import type { StorageBucket } from "../storage/interface";
-import type { BucketInfo, Theme } from "../types";
+import type { BucketInfo } from "../types";
 import { renderDetailsPage } from "../ui/details-page";
 import { getBucketByBinding } from "../utils/buckets";
 import { detectContentType } from "../utils/mime-detection";
+import { getTheme } from "../utils/theme";
 
 const MAX_TEXT_PREVIEW_SIZE = 1024 * 1024; // 1MB
 
@@ -202,7 +203,7 @@ export async function detailsPageRoute(
     `/b/${bucketBinding}/details/`,
     ""
   );
-  const theme = (url.searchParams.get("theme") as Theme) || "system";
+  const theme = getTheme(c);
 
   if (!filePath) {
     return c.text("File path is required", 400);
@@ -240,23 +241,22 @@ export async function detailsHandlerRoute(
   // Parse form data
   const formData = await c.req.formData();
   const action = formData.get("action") as string;
-  const theme = (formData.get("theme") as string) || "system";
 
   switch (action) {
     case "rename":
-      return handleRename(c, bucketInfo, formData, theme);
+      return handleRename(c, bucketInfo, formData);
     case "delete":
-      return handleDelete(c, bucketInfo, formData, theme);
+      return handleDelete(c, bucketInfo, formData);
     case "addMetadata":
-      return handleAddMetadata(c, bucketInfo, formData, theme);
+      return handleAddMetadata(c, bucketInfo, formData);
     case "updateMetadata":
-      return handleUpdateMetadata(c, bucketInfo, formData, theme);
+      return handleUpdateMetadata(c, bucketInfo, formData);
     case "addHttpMetadata":
-      return handleAddHttpMetadata(c, bucketInfo, formData, theme);
+      return handleAddHttpMetadata(c, bucketInfo, formData);
     case "updateHttpMetadata":
-      return handleUpdateHttpMetadata(c, bucketInfo, formData, theme);
+      return handleUpdateHttpMetadata(c, bucketInfo, formData);
     case "edit":
-      return handleEdit(c, bucketInfo, formData, theme);
+      return handleEdit(c, bucketInfo, formData);
     default:
       return c.text(`Unknown action: ${action}`, 400);
   }
@@ -265,8 +265,7 @@ export async function detailsHandlerRoute(
 async function handleRename(
   c: Context,
   bucketInfo: BucketInfo,
-  formData: FormData,
-  theme: string
+  formData: FormData
 ) {
   const oldFullPath = formData.get("oldFullPath") as string;
   const newFullPath = formData.get("newFullPath") as string;
@@ -286,8 +285,7 @@ async function handleRename(
 
   // If paths are the same, redirect to the new details page
   if (normalizedOldPath === normalizedNewPath) {
-    const redirectPath = `/b/${bucketInfo.binding
-      }/details/${normalizedNewPath}${isDirectory ? "/" : ""}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding}/details/${normalizedNewPath}${isDirectory ? "/" : ""}`;
     return c.redirect(redirectPath, 303);
   }
 
@@ -358,8 +356,7 @@ async function handleRename(
     }
 
     // Redirect to the new details page
-    const redirectPath = `/b/${bucketInfo.binding
-      }/details/${normalizedNewPath}${isDirectory ? "/" : ""}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding}/details/${normalizedNewPath}${isDirectory ? "/" : ""}`;
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to move/rename: ${String(error)}`, 500);
@@ -369,8 +366,7 @@ async function handleRename(
 async function handleDelete(
   c: Context,
   bucketInfo: BucketInfo,
-  formData: FormData,
-  theme: string
+  formData: FormData
 ) {
   const parentPath = formData.get("parentPath") as string;
   const name = formData.get("name") as string;
@@ -403,7 +399,7 @@ async function handleDelete(
     const redirectPath = parentPath
       ? `/b/${bucketInfo.binding}/${parentPath}`
       : `/b/${bucketInfo.binding}/`;
-    return c.redirect(`${redirectPath}?theme=${theme}`, 303);
+    return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to delete: ${String(error)}`, 500);
   }
@@ -412,8 +408,7 @@ async function handleDelete(
 async function handleAddMetadata(
   c: Context,
   bucketInfo: BucketInfo,
-  formData: FormData,
-  theme: string
+  formData: FormData
 ) {
   const fullPath = formData.get("fullPath") as string;
   const isDirectory = formData.get("isDirectory") === "true";
@@ -451,7 +446,7 @@ async function handleAddMetadata(
     });
 
     // Redirect back to the details page
-    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to add metadata: ${String(error)}`, 500);
@@ -461,8 +456,7 @@ async function handleAddMetadata(
 async function handleUpdateMetadata(
   c: Context,
   bucketInfo: BucketInfo,
-  formData: FormData,
-  theme: string
+  formData: FormData
 ) {
   const fullPath = formData.get("fullPath") as string;
   const isDirectory = formData.get("isDirectory") === "true";
@@ -526,7 +520,7 @@ async function handleUpdateMetadata(
     });
 
     // Redirect back to the details page
-    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to update metadata: ${String(error)}`, 500);
@@ -536,8 +530,7 @@ async function handleUpdateMetadata(
 async function handleAddHttpMetadata(
   c: Context,
   bucketInfo: BucketInfo,
-  formData: FormData,
-  theme: string
+  formData: FormData
 ) {
   const fullPath = formData.get("fullPath") as string;
   const isDirectory = formData.get("isDirectory") === "true";
@@ -607,7 +600,7 @@ async function handleAddHttpMetadata(
     });
 
     // Redirect back to the details page
-    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to add httpMetadata: ${String(error)}`, 500);
@@ -617,8 +610,7 @@ async function handleAddHttpMetadata(
 async function handleUpdateHttpMetadata(
   c: Context,
   bucketInfo: BucketInfo,
-  formData: FormData,
-  theme: string
+  formData: FormData
 ) {
   const fullPath = formData.get("fullPath") as string;
   const isDirectory = formData.get("isDirectory") === "true";
@@ -719,7 +711,7 @@ async function handleUpdateHttpMetadata(
     });
 
     // Redirect back to the details page
-    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to update httpMetadata: ${String(error)}`, 500);
@@ -729,8 +721,7 @@ async function handleUpdateHttpMetadata(
 async function handleEdit(
   c: Context,
   bucketInfo: BucketInfo,
-  formData: FormData,
-  theme: string
+  formData: FormData
 ) {
   const fullPath = formData.get("fullPath") as string;
   const content = formData.get("content") as string;
@@ -759,7 +750,7 @@ async function handleEdit(
     });
 
     // Redirect back to the details page
-    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to edit file: ${String(error)}`, 500);

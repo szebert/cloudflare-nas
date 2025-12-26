@@ -17,7 +17,6 @@ export async function uploadFilesRoute(
   // Parse multipart form data
   const formData = await c.req.formData();
   const path = formData.get("path") as string;
-  const theme = (formData.get("theme") as string) || "system";
   const files = formData.getAll("files") as File[];
 
   if (!files || files.length === 0) {
@@ -60,7 +59,7 @@ export async function uploadFilesRoute(
   const redirectPath = path
     ? `/b/${bucketBinding}/${path}`
     : `/b/${bucketBinding}/`;
-  return c.redirect(`${redirectPath}?theme=${theme}`, 303);
+  return c.redirect(redirectPath, 303);
 }
 
 export async function uploadFolderRoute(
@@ -78,7 +77,6 @@ export async function uploadFolderRoute(
   // Parse multipart form data
   const formData = await c.req.formData();
   const path = formData.get("path") as string;
-  const theme = (formData.get("theme") as string) || "system";
   const files = formData.getAll("files") as File[];
 
   if (!files || files.length === 0) {
@@ -122,5 +120,5 @@ export async function uploadFolderRoute(
   const redirectPath = path
     ? `/b/${bucketBinding}/${path}`
     : `/b/${bucketBinding}/`;
-  return c.redirect(`${redirectPath}?theme=${theme}`, 303);
+  return c.redirect(redirectPath, 303);
 }

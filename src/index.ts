@@ -7,6 +7,7 @@ import { downloadRoute } from "./routes/download";
 import { faviconRoute } from "./routes/favicon";
 import { createFileRoute } from "./routes/file";
 import { createFolderRoute } from "./routes/folder";
+import { setThemeRoute, settingsRoute } from "./routes/settings";
 import { stylesRoute } from "./routes/styles";
 import { uploadFilesRoute, uploadFolderRoute } from "./routes/upload";
 import { webdavRoute } from "./routes/webdav";
@@ -80,6 +81,10 @@ app.post("/b/:bucket/upload", uploadFilesRoute);
 
 // Upload folder
 app.post("/b/:bucket/upload-folder", uploadFolderRoute);
+
+// Settings page
+app.get("/b/:bucket/settings", settingsRoute);
+app.post("/b/:bucket/settings/theme", setThemeRoute);
 
 // Details page for file/folder (rename, delete, etc.) - must be before browse routes
 app.get("/b/:bucket/details/*", detailsPageRoute);

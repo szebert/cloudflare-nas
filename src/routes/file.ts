@@ -19,7 +19,6 @@ export async function createFileRoute(
   const name = formData.get("name") as string;
   const content = formData.get("content") as string;
   const path = formData.get("path") as string;
-  const theme = (formData.get("theme") as string) || "system";
 
   if (!name) {
     return c.text("File name is required", 400);
@@ -42,7 +41,7 @@ export async function createFileRoute(
     const redirectPath = path
       ? `/b/${bucketBinding}/${path}`
       : `/b/${bucketBinding}/`;
-    return c.redirect(`${redirectPath}?theme=${theme}`, 303);
+    return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to create file: ${String(error)}`, 500);
   }

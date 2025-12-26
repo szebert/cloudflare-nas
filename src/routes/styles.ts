@@ -2,13 +2,10 @@ import type { Context } from "hono";
 import baseStyles from "../styles/base.css";
 import darkColors from "../styles/dark.css";
 import lightColors from "../styles/light.css";
-import type { Theme } from "../types";
+import { getTheme } from "../utils/theme";
 
 export async function stylesRoute(c: Context) {
-  const url = new URL(c.req.url);
-  const themeParam = url.searchParams.get("theme");
-  const theme: Theme =
-    themeParam === "light" || themeParam === "dark" ? themeParam : "system";
+  const theme = getTheme(c);
 
   let combinedStyles: string;
 

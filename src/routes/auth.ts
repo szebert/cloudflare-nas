@@ -8,6 +8,7 @@ import { clearSession, createSession, validateSession } from "../auth/session";
 import { getUserById, verifyUserCredentials } from "../db/users";
 import { renderLoginPage } from "../ui/login-page";
 import { logger } from "../utils/logger";
+import { getTheme } from "../utils/theme";
 
 const SESSION_COOKIE_NAME = "session_token";
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -44,8 +45,7 @@ export async function loginPageRoute(
   const log = logger();
   const db = (c.env as any).DB as D1Database;
   const redirectUrl = c.req.query("redirect");
-  const theme =
-    (c.req.query("theme") as "light" | "dark" | "system") || "system";
+  const theme = getTheme(c);
 
   // Check if user is already authenticated
   if (db) {
@@ -86,8 +86,7 @@ export async function loginHandlerRoute(
   const username = formData.get("username") as string;
   const password = formData.get("password") as string;
   const redirectUrl = c.req.query("redirect");
-  const theme =
-    (c.req.query("theme") as "light" | "dark" | "system") || "system";
+  const theme = getTheme(c);
 
   if (!username || !password) {
     const html = renderLoginPage(

@@ -11,31 +11,19 @@ export function renderHead(options: { title: string; theme: Theme }): string {
   ${darkReaderMeta}
   <title>${title}</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="/style.css?theme=${theme}">
+  <link rel="stylesheet" href="/style.css">
 </head>`;
 }
 
 export function renderThemeSwitcher(
   bucket: BucketInfo,
-  path: string,
-  currentTheme: Theme,
-  options?: { isDetailsPage?: boolean; isDirectory?: boolean }
+  currentTheme: Theme
 ): string {
   const themes: { value: Theme; emoji: string; label: string }[] = [
+    { value: "dark", emoji: "🌙", label: "Dark" },
     { value: "system", emoji: "🌓", label: "Auto" },
     { value: "light", emoji: "☀️", label: "Light" },
-    { value: "dark", emoji: "🌙", label: "Dark" },
   ];
-
-  const isDetailsPage = options?.isDetailsPage ?? false;
-  const isDirectory = options?.isDirectory ?? false;
-
-  let basePath: string;
-  if (isDetailsPage) {
-    basePath = `/b/${bucket.binding}/details/${path}${isDirectory ? "/" : ""}`;
-  } else {
-    basePath = path ? `/b/${bucket.binding}/${path}` : `/b/${bucket.binding}/`;
-  }
 
   const currentEmoji =
     themes.find((t) => t.value === currentTheme)?.emoji || "🌓";
@@ -44,25 +32,51 @@ export function renderThemeSwitcher(
     .map((t) => {
       const isCurrent = t.value === currentTheme;
       const className = isCurrent ? "popup-item current" : "popup-item";
-      return `<a href="${basePath}?theme=${t.value}" class="${className}">${t.emoji} ${t.label}</a>`;
+      return `<button type="submit" name="theme" value="${t.value}" class="${className}">${t.emoji} ${t.label}</button>`;
     })
     .join("");
 
   return `
-    <div class="switcher-popup">
+    <form method="POST" action="/b/${bucket.binding}/settings/theme" class="switcher-popup">
       <button type="button" class="btn action-btn">
         ${currentEmoji} Theme ▾
       </button>
       <div class="popup-menu">
         ${themeOptions}
       </div>
-    </div>`;
+    </form>`;
+}
+
+export function renderThemeButtonGroup(
+  bucketBinding: string,
+  currentTheme: Theme,
+): string {
+  const themes: { value: Theme; emoji: string; label: string }[] = [
+    { value: "dark", emoji: "🌙", label: "Dark" },
+    { value: "system", emoji: "🌓", label: "Auto" },
+    { value: "light", emoji: "☀️", label: "Light" },
+  ];
+
+  const buttons = themes
+    .map((t) => {
+      const isCurrent = t.value === currentTheme;
+      const className = isCurrent ? "btn btn-theme active" : "btn btn-theme";
+      const disabled = isCurrent ? " disabled" : "";
+      return `<button type="submit" name="theme" value="${t.value}" class="${className}"${disabled}>${t.emoji} ${t.label}</button>`;
+    })
+    .join("");
+
+  return `
+    <form method="POST" action="/b/${bucketBinding}/settings/theme">
+      <div class="theme-button-group">
+        ${buttons}
+      </div>
+    </form>`;
 }
 
 export function renderBucketSwitcher(
   buckets: BucketInfo[],
-  currentBucket: BucketInfo,
-  theme: Theme
+  currentBucket: BucketInfo
 ): string {
   // Don't render if only one bucket
   if (buckets.length <= 1) return "";
@@ -71,7 +85,7 @@ export function renderBucketSwitcher(
     .map((b) => {
       const isCurrent = b.binding === currentBucket.binding;
       const className = isCurrent ? "popup-item current" : "popup-item";
-      return `<a href="/b/${b.binding}/?theme=${theme}" class="${className}">📁 ${b.binding}</a>`;
+      return `<a href="/b/${b.binding}/" class="${className}">📁 ${b.binding}</a>`;
     })
     .join("");
 
@@ -107,13 +121,4 @@ export function renderNewMenu(): string {
         </a>
       </div>
     </div>`;
-}
-
-export function renderLogoutButton(): string {
-  return `
-    <form method="POST" action="/logout" style="display: inline;">
-      <button type="submit" class="btn action-btn">
-        🚪 Logout
-      </button>
-    </form>`;
 }

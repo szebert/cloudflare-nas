@@ -6,10 +6,10 @@ import type {
   FileEntry,
   SortField,
   SortOrder,
-  Theme,
 } from "../types";
 import { renderListing } from "../ui/listing-page";
 import { getBucketByBinding } from "../utils/buckets";
+import { getTheme } from "../utils/theme";
 
 export async function browseRoute(
   c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[] } }>
@@ -34,10 +34,7 @@ export async function browseRoute(
     path += "/";
   }
 
-  // Get query params
-  const themeParam = url.searchParams.get("theme");
-  const theme: Theme =
-    themeParam === "light" || themeParam === "dark" ? themeParam : "system";
+  const theme = getTheme(c);
   const sortField = (url.searchParams.get("sort") as SortField) || "name";
   const sortOrder = (url.searchParams.get("order") as SortOrder) || "asc";
 

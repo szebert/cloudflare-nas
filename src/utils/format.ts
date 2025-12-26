@@ -1,4 +1,4 @@
-import type { BucketInfo, SortField, SortOrder, Theme } from "../types";
+import type { BucketInfo, SortField, SortOrder } from "../types";
 
 export function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -30,7 +30,6 @@ export function getFileType(contentType: string | null): string {
 export function buildSortUrl(
   bucket: BucketInfo,
   path: string,
-  theme: Theme,
   field: SortField,
   currentField: SortField,
   currentOrder: SortOrder
@@ -40,7 +39,7 @@ export function buildSortUrl(
   const basePath = path
     ? `/b/${bucket.binding}/${path}`
     : `/b/${bucket.binding}/`;
-  return `${basePath}?theme=${theme}&sort=${field}&order=${newOrder}`;
+  return `${basePath}?sort=${field}&order=${newOrder}`;
 }
 
 export function getSortIndicator(
