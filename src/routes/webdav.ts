@@ -246,32 +246,27 @@ async function handlePropfind(
       <D:href>${escapeXml(href)}</D:href>
       <D:propstat>
         <D:prop>
-          ${
-            requestedProps.includes("displayname")
-              ? `<D:displayname>${escapeXml(
-                  entry.path.replace(/\/$/, "").split("/").pop() || "/"
-                )}</D:displayname>`
-              : ""
+          ${requestedProps.includes("displayname")
+            ? `<D:displayname>${escapeXml(
+              entry.path.replace(/\/$/, "").split("/").pop() || "/"
+            )}</D:displayname>`
+            : ""
           }
-          ${
-            requestedProps.includes("resourcetype")
-              ? `<D:resourcetype><D:collection/></D:resourcetype>`
-              : ""
+          ${requestedProps.includes("resourcetype")
+            ? `<D:resourcetype><D:collection/></D:resourcetype>`
+            : ""
           }
-          ${
-            requestedProps.includes("getcontentlength")
-              ? `<D:getcontentlength/>`
-              : ""
+          ${requestedProps.includes("getcontentlength")
+            ? `<D:getcontentlength/>`
+            : ""
           }
-          ${
-            requestedProps.includes("getlastmodified")
-              ? `<D:getlastmodified/>`
-              : ""
+          ${requestedProps.includes("getlastmodified")
+            ? `<D:getlastmodified/>`
+            : ""
           }
-          ${
-            requestedProps.includes("getcontenttype")
-              ? `<D:getcontenttype/>`
-              : ""
+          ${requestedProps.includes("getcontenttype")
+            ? `<D:getcontenttype/>`
+            : ""
           }
         </D:prop>
         <D:status>HTTP/1.1 200 OK</D:status>
@@ -307,26 +302,22 @@ async function handlePropfind(
       <D:href>${escapeXml(href)}</D:href>
       <D:propstat>
         <D:prop>
-          ${
-            requestedProps.includes("displayname")
-              ? `<D:displayname>${escapeXml(name)}</D:displayname>`
-              : ""
+          ${requestedProps.includes("displayname")
+            ? `<D:displayname>${escapeXml(name)}</D:displayname>`
+            : ""
           }
           ${requestedProps.includes("resourcetype") ? `<D:resourcetype/>` : ""}
-          ${
-            requestedProps.includes("getcontentlength")
-              ? `<D:getcontentlength>${size}</D:getcontentlength>`
-              : ""
+          ${requestedProps.includes("getcontentlength")
+            ? `<D:getcontentlength>${size}</D:getcontentlength>`
+            : ""
           }
-          ${
-            requestedProps.includes("getlastmodified")
-              ? `<D:getlastmodified>${modified}</D:getlastmodified>`
-              : ""
+          ${requestedProps.includes("getlastmodified")
+            ? `<D:getlastmodified>${modified}</D:getlastmodified>`
+            : ""
           }
-          ${
-            requestedProps.includes("getcontenttype")
-              ? `<D:getcontenttype>${contentType}</D:getcontenttype>`
-              : ""
+          ${requestedProps.includes("getcontenttype")
+            ? `<D:getcontenttype>${contentType}</D:getcontenttype>`
+            : ""
           }
         </D:prop>
         <D:status>HTTP/1.1 200 OK</D:status>

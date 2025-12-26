@@ -286,9 +286,8 @@ async function handleRename(
 
   // If paths are the same, redirect to the new details page
   if (normalizedOldPath === normalizedNewPath) {
-    const redirectPath = `/b/${
-      bucketInfo.binding
-    }/details/${normalizedNewPath}${isDirectory ? "/" : ""}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding
+      }/details/${normalizedNewPath}${isDirectory ? "/" : ""}?theme=${theme}`;
     return c.redirect(redirectPath, 303);
   }
 
@@ -359,9 +358,8 @@ async function handleRename(
     }
 
     // Redirect to the new details page
-    const redirectPath = `/b/${
-      bucketInfo.binding
-    }/details/${normalizedNewPath}${isDirectory ? "/" : ""}?theme=${theme}`;
+    const redirectPath = `/b/${bucketInfo.binding
+      }/details/${normalizedNewPath}${isDirectory ? "/" : ""}?theme=${theme}`;
     return c.redirect(redirectPath, 303);
   } catch (error) {
     return c.text(`Failed to move/rename: ${String(error)}`, 500);

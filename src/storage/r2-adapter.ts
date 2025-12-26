@@ -17,7 +17,7 @@ import type {
  * Adapter that wraps R2Bucket to implement StorageBucket interface
  */
 export class R2StorageAdapter implements StorageBucket {
-  constructor(private readonly r2Bucket: R2Bucket) {}
+  constructor(private readonly r2Bucket: R2Bucket) { }
 
   async head(key: string): Promise<StorageObject | null> {
     const r2Object = await this.r2Bucket.head(key);
@@ -51,12 +51,12 @@ export class R2StorageAdapter implements StorageBucket {
   ): Promise<StorageObject> {
     const r2Options = options
       ? {
-          httpMetadata: options.httpMetadata
-            ? this.mapStorageHTTPMetadataToR2(options.httpMetadata)
-            : undefined,
-          customMetadata: options.customMetadata,
-          storageClass: options.storageClass,
-        }
+        httpMetadata: options.httpMetadata
+          ? this.mapStorageHTTPMetadataToR2(options.httpMetadata)
+          : undefined,
+        customMetadata: options.customMetadata,
+        storageClass: options.storageClass,
+      }
       : undefined;
 
     const r2Object = await this.r2Bucket.put(key, value, r2Options);
@@ -70,13 +70,13 @@ export class R2StorageAdapter implements StorageBucket {
   async list(options?: StorageListOptions): Promise<StorageObjects> {
     const r2Options = options
       ? {
-          limit: options.limit,
-          prefix: options.prefix,
-          cursor: options.cursor,
-          delimiter: options.delimiter,
-          startAfter: options.startAfter,
-          include: options.include,
-        }
+        limit: options.limit,
+        prefix: options.prefix,
+        cursor: options.cursor,
+        delimiter: options.delimiter,
+        startAfter: options.startAfter,
+        include: options.include,
+      }
       : undefined;
 
     const r2Objects = await this.r2Bucket.list(r2Options);

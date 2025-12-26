@@ -28,13 +28,13 @@ function makeLogger(env: Env): Logger {
 
   const minLevel: LogLevel =
     envLevel === "debug" ||
-    envLevel === "info" ||
-    envLevel === "warn" ||
-    envLevel === "error"
+      envLevel === "info" ||
+      envLevel === "warn" ||
+      envLevel === "error"
       ? (envLevel as LogLevel)
       : isDev
-      ? "debug"
-      : "info";
+        ? "debug"
+        : "info";
 
   function log(level: LogLevel, msg: string, ctx: LogContext = {}) {
     if (levelOrder[level] < levelOrder[minLevel]) return;
