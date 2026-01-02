@@ -4,9 +4,13 @@ A lightweight, self-hosted file browser for Cloudflare R2 storage buckets. Brows
 
 ## Features
 
-- **🔒 Security**
+- **🔒 Security & User Management**
 
-  - Basic Authentication
+  - Multi-user authentication with D1 database
+  - Admin and regular user roles
+  - First-run setup wizard for initial admin account
+  - Session-based authentication for web UI
+  - Basic Authentication for WebDAV/API
   - Self-hosted on your Cloudflare account
 
 - **📁 File Management**
@@ -40,6 +44,14 @@ A lightweight, self-hosted file browser for Cloudflare R2 storage buckets. Brows
   - Mount as a network drive on macOS
   - Full read/write support via WebDAV protocol
 
+- **🔗 Shareable Links**
+
+  - Create public share links for files and folders
+  - Optional password protection
+  - Optional expiration dates
+  - Optional download limits
+  - Manage active share links from settings
+
 - **🎨 Theming**
   - Light, dark, and system-auto themes
   - Mobile-responsive design
@@ -48,11 +60,7 @@ A lightweight, self-hosted file browser for Cloudflare R2 storage buckets. Brows
 
 - [ ] Multi-part upload for large files
 - [ ] PDF previews
-- [ ] Cloudflare D1 integration
-  - User authentication and management
-  - Permission levels (read, write, admin)
-  - Support for shareable links with permission controls
-- [ ] Shareable links (requires D1 integration for permissions)
+- [ ] Granular share permissions (read/write per share)
 - [ ] npm package distribution
   - Quick setup via `pnpm dlx cloudflare-nas`
   - CLI tool for initialization
@@ -169,28 +177,15 @@ The WebDAV implementation supports:
    npx wrangler d1 execute nas-db --file=schema.sql
    ```
 
-5. **Create the first admin user:**
-
-   ```bash
-   # Install tsx if not already installed
-   npm install --save-dev tsx
-
-   # Generate SQL for creating an admin user
-   npm run create-admin admin your-secure-password
-
-   # Copy the generated SQL and run it:
-   npx wrangler d1 execute nas-db --command="<paste SQL here>"
-   ```
-
-   Or manually create a user via the Cloudflare dashboard or D1 console.
-
-6. **Run locally:**
+5. **Run locally:**
 
    ```bash
    npm run dev
    ```
 
-7. **Deploy:**
+   On first run, visit the login page and you'll be prompted to create your admin account.
+
+6. **Deploy:**
    ```bash
    npm run deploy
    ```
