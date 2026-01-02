@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import type { BucketInfo } from "../types";
-import { getBucketByBinding } from "../utils/buckets";
+import { getBucketByBinding, setCurrentBucket } from "../utils/buckets";
 
 export async function createFolderRoute(
   c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[] } }>
@@ -13,6 +13,9 @@ export async function createFolderRoute(
   if (!bucketInfo) {
     return c.text(`Bucket "${bucketBinding}" not found`, 404);
   }
+
+  // Set the bucket cookie
+  setCurrentBucket(c, bucketBinding);
 
   // Parse form data
   const formData = await c.req.formData();

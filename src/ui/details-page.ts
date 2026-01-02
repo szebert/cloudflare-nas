@@ -1,6 +1,8 @@
+import type { AuthenticatedUser } from "../auth/middleware";
+import type { ShareLink } from "../db/share-links";
 import type { FileDetails } from "../routes/details";
 import type { BucketInfo, Theme } from "../types";
-import { escapeHtml, formatDateUTC, formatSize } from "../utils/format";
+import { escapeHtml, formatDateString, formatISOString, formatSize } from "../utils/format";
 import {
   renderHead,
 } from "./components";
@@ -10,6 +12,9 @@ export interface DetailsPageOptions {
   fileDetails: FileDetails;
   theme: Theme;
   buckets: BucketInfo[];
+  user?: AuthenticatedUser;
+  shareLinks?: ShareLink[];
+  shareUrl?: string; // Newly created share URL to display
 }
 
 function buildBreadcrumbs(
@@ -41,7 +46,7 @@ function buildBreadcrumbs(
 }
 
 export function renderDetailsPage(options: DetailsPageOptions): string {
-  const { bucketInfo, fileDetails, theme, buckets } = options;
+  const { bucketInfo, fileDetails, theme, buckets, user, shareLinks = [], shareUrl } = options;
   const {
     name,
     fullPath,
@@ -73,7 +78,7 @@ export function renderDetailsPage(options: DetailsPageOptions): string {
   const deleteModalId = `delete-${fullPath.replace(/[^a-zA-Z0-9]/g, "-")}`;
 
   const displayPath = "/" + (fullPath || "");
-  const settingsLink = `<a href="/b/${bucketInfo.binding}/settings" class="btn action-btn">⚙️ Settings</a>`;
+  const settingsLink = `<a href="/settings" class="btn btn-action">⚙️ Settings</a>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -86,7 +91,7 @@ ${renderHead({ title: `${name} - Details`, theme })}
     </div>
   </div>
   <hr>
-  <div class="file-details-page">
+  <div class="details-page">
     <div class="breadcrumbs">
       ${breadcrumbs}
     </div>
@@ -96,6 +101,7 @@ ${renderHead({ title: `${name} - Details`, theme })}
       ? `<a href="${downloadUrl}" class="btn btn-primary">⬇️ Download</a>`
       : ""
     }
+      <a href="#share-modal" class="btn btn-success">🔗 Share</a>
       ${canEditFile
       ? `<a href="#edit-file-modal" class="btn btn-secondary">✏️ Edit</a>`
       : ""
@@ -104,11 +110,71 @@ ${renderHead({ title: `${name} - Details`, theme })}
       <a href="#${deleteModalId}" class="btn btn-delete">🗑️ Delete</a>
     </div>
 
+    ${shareUrl ? `
+    <div class="alert alert-success">
+      <strong>Share link created!</strong> 
+      <div>
+        <code class="code-block-small">${escapeHtml(shareUrl)}</code>
+        <a href="${escapeHtml(shareUrl)}" target="_blank" class="btn btn-small btn-secondary btn-spacing-left">🔗 Open</a>
+      </div>
+    </div>
+    ` : ''}
+
+    ${user && shareLinks.length > 0 ? `
+    <div class="details-section">
+      <div class="metadata-section-header">
+        <h2>🔗 Share Links</h2>
+      </div>
+        <table class="share-links-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Expires</th>
+              <th>
+                <span class="mobile-hidden">Downloads</span>
+                <span class="mobile-visible">DLs</span>
+              </th>
+              <th>Created</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${shareLinks.map((link) => {
+      const expiresText = formatISOString(link.expires_at, 'Never');
+      const expiresDateOnly = formatDateString(link.expires_at, 'Never');
+
+      const downloadsText = link.max_downloads !== null
+        ? `${link.download_count} / ${link.max_downloads}`
+        : `${link.download_count}`;
+
+      const detailsLink = `<a href="/settings/links/${link.id}" class="details-link" title="Share link details">⋮</a>`;
+
+      return `
+                <tr>
+                  <td><code>${escapeHtml(link.token)}</code></td>
+                  <td>
+                    <span class="mobile-hidden">${expiresText}</span>
+                    <span class="mobile-visible">${expiresDateOnly}</span>
+                  </td>
+                  <td>${downloadsText}</td>
+                  <td>
+                    <span class="mobile-hidden">${formatISOString(link.created_at)}</span>
+                    <span class="mobile-visible">${formatDateString(link.created_at)}</span>
+                  </td>
+                  <td>${detailsLink}</td>
+                </tr>
+              `;
+    }).join('')}
+          </tbody>
+        </table>
+    </div>
+    ` : ''}
+
     <div class="details-section">
       <h2>Object Details</h2>
       <div class="details-grid">
         <div class="detail-label">Date Created:</div>
-        <div class="detail-value">${formatDateUTC(modified)}</div>
+        <div class="detail-value">${formatISOString(modified)}</div>
         <div class="detail-label">Type:</div>
         <div class="detail-value">${contentType || "-"}</div>
         <div class="detail-label">Storage Class:</div>
@@ -450,6 +516,38 @@ ${renderHead({ title: `${name} - Details`, theme })}
           <div class="modal-buttons">
             <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
             <button type="submit" class="btn btn-secondary">Save Metadata</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="share-modal" class="modal-overlay">
+      <div class="modal">
+        <h2>🔗 Create Share Link</h2>
+        <form method="POST" class="modal-form" action="/b/${bucketInfo.binding}/share">
+          <input type="hidden" name="path" value="${fullPath}">
+          <input type="hidden" name="isDirectory" value="${isDirectory}">
+          <input type="hidden" name="redirect" value="${currentDetailsUrl}">
+          
+          <div class="form-group">
+            <label for="share-password">Password (optional)</label>
+            <input type="password" id="share-password" name="password" placeholder="Leave empty for no password">
+          </div>
+          
+          <div class="form-group">
+            <label for="share-expires">Expiration (optional)</label>
+            <input type="datetime-local" id="share-expires" name="expiresAt">
+          </div>
+          
+          <div class="form-group">
+            <label for="share-max-downloads">Max Downloads (optional)</label>
+            <input type="number" id="share-max-downloads" name="maxDownloads" min="1" placeholder="Unlimited">
+          </div>
+          
+          <div class="modal-buttons">
+            <a href="${currentDetailsUrl}" class="btn btn-cancel">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create Share Link</button>
           </div>
         </form>
       </div>

@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import type { BucketInfo } from "../types";
-import { getBucketByBinding } from "../utils/buckets";
+import { getBucketByBinding, setCurrentBucket } from "../utils/buckets";
 import { formatContentDisposition } from "../utils/format";
 
 export async function downloadRoute(
@@ -14,6 +14,9 @@ export async function downloadRoute(
   if (!bucketInfo) {
     return c.text(`Bucket "${bucketBinding}" not found`, 404);
   }
+
+  // Set the bucket cookie
+  setCurrentBucket(c, bucketBinding);
 
   const url = new URL(c.req.url);
   // Remove /b/:bucket/download prefix from path

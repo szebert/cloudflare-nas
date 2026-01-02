@@ -5,8 +5,7 @@
     "dev": "wrangler dev --remote",
     "dev-https": "wrangler dev --remote --local-protocol=https --https-cert-path=wrangler-dev-cert.pem --https-key-path=wrangler-dev-key.pem",
     "deploy": "wrangler deploy",
-    "generate-types": "wrangler types",
-    "create-admin": "tsx scripts/create-admin.ts"
+    "generate-types": "wrangler types"
   },
   "dependencies": {
     "hono": "^4.11.3"

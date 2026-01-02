@@ -13,6 +13,7 @@ export interface AuthenticatedUser {
   id: string;
   username: string;
   is_admin: boolean;
+  must_change_password: boolean;
 }
 
 const SESSION_COOKIE_NAME = "session_token";
@@ -64,11 +65,25 @@ export async function authMiddleware(
     if (userId) {
       const user = await getUserById(db, userId);
       if (user) {
-        c.set("user", {
+        const authenticatedUser: AuthenticatedUser = {
           id: user.id,
           username: user.username,
           is_admin: user.is_admin === 1,
-        });
+          must_change_password: user.must_change_password === 1,
+        };
+        c.set("user", authenticatedUser);
+
+        // Check if user must change password (for browser requests only)
+        if (user.must_change_password === 1) {
+          const currentPath = new URL(c.req.url).pathname;
+          // Allow access to password change endpoint and logout
+          if (!currentPath.startsWith("/change-password") &&
+            !currentPath.startsWith("/logout") &&
+            !currentPath.startsWith("/styles")) {
+            return c.redirect("/change-password");
+          }
+        }
+
         await next();
         return;
       }
@@ -88,7 +103,9 @@ export async function authMiddleware(
         id: user.id,
         username: user.username,
         is_admin: user.is_admin === 1,
+        must_change_password: user.must_change_password === 1,
       });
+      // For API/WebDAV, we don't redirect - let the client handle it
       await next();
       return;
     }
@@ -143,6 +160,7 @@ export async function optionalAuthMiddleware(
           id: user.id,
           username: user.username,
           is_admin: user.is_admin === 1,
+          must_change_password: user.must_change_password === 1,
         });
       }
     }
@@ -161,6 +179,7 @@ export async function optionalAuthMiddleware(
         id: user.id,
         username: user.username,
         is_admin: user.is_admin === 1,
+        must_change_password: user.must_change_password === 1,
       });
     }
   }

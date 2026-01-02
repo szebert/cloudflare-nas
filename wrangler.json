@@ -7,9 +7,6 @@
   "name": "cloudflare-nas",
   "main": "src/index.ts",
   "compatibility_date": "2025-11-17",
-  "vars": {
-    "AUTH_USERNAME": "admin"
-  },
   "r2_buckets": [
     {
       "binding": "r2-explorer",
@@ -35,7 +32,9 @@
   "rules": [
     {
       "type": "Text",
-      "globs": ["**/*.css"],
+      "globs": [
+        "**/*.css"
+      ],
       "fallthrough": true
     }
   ]

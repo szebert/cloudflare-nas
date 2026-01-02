@@ -5,14 +5,15 @@ export function renderHead(options: { title: string; theme: Theme }): string {
   const darkReaderMeta =
     theme === "dark" ? `<meta name="darkreader-lock">` : "";
 
-  return `<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  ${darkReaderMeta}
-  <title>${title}</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="/style.css">
-</head>`;
+  return `
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      ${darkReaderMeta}
+      <title>${title}</title>
+      <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+      <link rel="stylesheet" href="/style.css?theme=${theme}">
+    </head>`;
 }
 
 export function renderThemeSwitcher(
@@ -37,8 +38,8 @@ export function renderThemeSwitcher(
     .join("");
 
   return `
-    <form method="POST" action="/b/${bucket.binding}/settings/theme" class="switcher-popup">
-      <button type="button" class="btn action-btn">
+    <form method="POST" action="/settings/theme" class="btn-action-popup">
+      <button type="button" class="btn btn-action">
         ${currentEmoji} Theme ▾
       </button>
       <div class="popup-menu">
@@ -48,7 +49,7 @@ export function renderThemeSwitcher(
 }
 
 export function renderThemeButtonGroup(
-  bucketBinding: string,
+  _bucketBinding: string,
   currentTheme: Theme,
 ): string {
   const themes: { value: Theme; emoji: string; label: string }[] = [
@@ -67,7 +68,7 @@ export function renderThemeButtonGroup(
     .join("");
 
   return `
-    <form method="POST" action="/b/${bucketBinding}/settings/theme">
+    <form method="POST" action="/settings/theme">
       <div class="theme-button-group">
         ${buttons}
       </div>
@@ -90,8 +91,8 @@ export function renderBucketSwitcher(
     .join("");
 
   return `
-    <div class="switcher-popup">
-      <button type="button" class="btn action-btn">
+    <div class="btn-action-popup">
+      <button type="button" class="btn btn-action">
         📁 ${currentBucket.binding} ▾
       </button>
       <div class="popup-menu">
@@ -102,8 +103,8 @@ export function renderBucketSwitcher(
 
 export function renderNewMenu(): string {
   return `
-    <div class="switcher-popup">
-      <button type="button" class="btn action-btn">
+    <div class="btn-action-popup">
+      <button type="button" class="btn btn-action">
         ➕ New ▾
       </button>
       <div class="popup-menu">

@@ -10,24 +10,30 @@ export async function stylesRoute(c: Context) {
   let combinedStyles: string;
 
   if (theme === "light") {
-    combinedStyles = `<style>
-${baseStyles}
-${lightColors}
-</style>`;
+    combinedStyles = `
+      <style>
+        ${baseStyles}
+        ${lightColors}
+      </style>
+    `;
   } else if (theme === "dark") {
-    combinedStyles = `<style>
-${baseStyles}
-${darkColors}
-</style>`;
+    combinedStyles = `
+      <style>
+        ${baseStyles}
+        ${darkColors}
+      </style>
+    `;
   } else {
     // system - use media query
-    combinedStyles = `<style>
-${baseStyles}
-${lightColors}
-@media (prefers-color-scheme: dark) {
-${darkColors}
-}
-</style>`;
+    combinedStyles = `
+      <style>
+        ${baseStyles}
+        ${lightColors}
+        @media (prefers-color-scheme: dark) {
+          ${darkColors}
+        }
+      </style>
+    `;
   }
 
   return c.body(combinedStyles, 200, {

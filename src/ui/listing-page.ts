@@ -1,13 +1,11 @@
 import type { BucketInfo, FileEntry, ListingOptions } from "../types";
 import {
   buildSortUrl,
-  formatDateUTC,
-  formatDateUTCDateOnly,
+  formatDateString,
+  formatISOString,
   formatSize,
-  getFilePath,
-  getFileType,
   getParentPath,
-  getSortIndicator,
+  getSortIndicator
 } from "../utils/format";
 import {
   renderBucketSwitcher,
@@ -37,7 +35,7 @@ export function renderListing(options: ListingOptions): string {
 
   const bucketSwitcher = renderBucketSwitcher(buckets, currentBucket);
   const newMenu = renderNewMenu();
-  const settingsLink = `<a href="/b/${currentBucket.binding}/settings" class="btn action-btn">⚙️ Settings</a>`;
+  const settingsLink = `<a href="/settings" class="btn btn-action">⚙️ Settings</a>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -59,21 +57,21 @@ ${renderHead({
   <table>
     <thead>
       <tr>
-        <th class="name"><a href="${buildSortUrl(
+        <th><a href="${buildSortUrl(
     currentBucket,
     path,
     "name",
     sortField,
     sortOrder
   )}">Name${getSortIndicator("name", sortField, sortOrder)}</a></th>
-        <th class="type"><a href="${buildSortUrl(
+        <th class="col-type"><a href="${buildSortUrl(
     currentBucket,
     path,
     "type",
     sortField,
     sortOrder
   )}">Type${getSortIndicator("type", sortField, sortOrder)}</a></th>
-        <th class="modified"><a href="${buildSortUrl(
+        <th class="col-time"><a href="${buildSortUrl(
     currentBucket,
     path,
     "modified",
@@ -84,30 +82,30 @@ ${renderHead({
     sortField,
     sortOrder
   )}</a></th>
-        <th class="size"><a href="${buildSortUrl(
+        <th class="col-size"><a href="${buildSortUrl(
     currentBucket,
     path,
     "size",
     sortField,
     sortOrder
   )}">Size${getSortIndicator("size", sortField, sortOrder)}</a></th>
-        <th class="details"></th>
+        <th class="col-details"></th>
       </tr>
     </thead>
     <tbody>
 ${parentPath !== null
       ? `<tr>
-        <td class="name"><a href="/b/${currentBucket.binding}/${parentPath}">📁 ..</a></td>
-        <td class="type">-</td>
-        <td class="modified">-</td>
-        <td class="size">-</td>
-        <td class="details"></td>
+        <td><a href="/b/${currentBucket.binding}/${parentPath}">📁 ..</a></td>
+        <td class="col-type">-</td>
+        <td class="col-time">-</td>
+        <td class="col-size">-</td>
+        <td class="col-details"></td>
       </tr>`
       : ""
     }
 ${entries.length === 0 && parentPath === null
       ? `<tr>
-        <td class="name empty-message" colspan="5">This folder is empty</td>
+        <td class="empty" colspan="5">This folder is empty</td>
       </tr>`
       : entries
         .map((entry) => renderRow(entry, currentBucket, path))
@@ -205,7 +203,7 @@ function renderRow(
   bucket: BucketInfo,
   basePath: string
 ): string {
-  const filePath = getFilePath(basePath, entry.name);
+  const filePath = basePath ? `${basePath}${entry.name}` : entry.name;
   const icon = entry.isDirectory ? "📁" : "📄";
   const href = entry.isDirectory
     ? `/b/${bucket.binding}/${filePath}/`
@@ -216,20 +214,25 @@ function renderRow(
   const detailsLink = `<a href="${detailsUrl}" class="details-link" title="Details">⋮</a>`;
   const typeDisplay = entry.isDirectory
     ? "Folder"
-    : getFileType(entry.contentType);
-  const isoString = formatDateUTC(entry.modified);
-  const dateOnly = formatDateUTCDateOnly(entry.modified);
+    : entry.contentType
+      ? entry.contentType
+      : "-";
+  const isoString = formatISOString(entry.modified);
   let modifiedCell = "-";
   if (entry.modified && isoString !== "-") {
-    modifiedCell = `<span class="date-display"><span class="date-iso">${isoString}</span><span class="date-only">${dateOnly}</span></span>`;
+    modifiedCell = `
+      <span class="date-display">
+        <span class="mobile-hidden">${isoString}</span>
+        <span class="mobile-visible">${formatDateString(entry.modified)}</span>
+      </span>`;
   }
 
   return `
   <tr>
-    <td class="name"><a href="${href}">${icon} ${displayName}</a></td>
-    <td class="type">${typeDisplay}</td>
-    <td class="modified">${modifiedCell}</td>
-    <td class="size">${entry.isDirectory ? "-" : formatSize(entry.size)}</td>
-    <td class="details">${detailsLink}</td>
+    <td><a href="${href}">${icon} ${displayName}</a></td>
+    <td class="col-type">${typeDisplay}</td>
+    <td class="col-time">${modifiedCell}</td>
+    <td class="col-size">${entry.isDirectory ? "-" : formatSize(entry.size)}</td>
+    <td class="col-details">${detailsLink}</td>
   </tr>`;
 }

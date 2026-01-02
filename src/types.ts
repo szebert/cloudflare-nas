@@ -32,6 +32,21 @@ export interface User {
   id: string;
   username: string;
   is_admin: boolean;
+  must_change_password: boolean;
+}
+
+export interface ShareLink {
+  id: string;
+  token: string;
+  created_by: string;
+  r2_bucket: string;
+  r2_path: string;
+  is_directory: boolean;
+  has_password: boolean;
+  expires_at: number | null;
+  max_downloads: number | null;
+  download_count: number;
+  created_at: number;
 }
 
 export interface Share {

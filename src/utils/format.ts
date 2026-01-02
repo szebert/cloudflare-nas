@@ -8,23 +8,24 @@ export function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
-export function formatDateUTC(date: Date | null): string {
-  if (!date) return "-";
+export function formatISOString(date: Date | number | null, nullString = "-"): string {
+  if (!date) return nullString;
+  if (typeof date === "number") {
+    date = new Date(date);
+  }
   return date.toISOString();
 }
 
-export function formatDateUTCDateOnly(date: Date | null): string {
-  if (!date) return "-";
+export function formatDateString(date: Date | number | null, nullString = "-"): string {
+  if (!date) return nullString;
+  if (typeof date === "number") {
+    date = new Date(date);
+  }
   // Format as YYYY-MM-DD (date only)
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-export function getFileType(contentType: string | null): string {
-  if (!contentType) return "-";
-  return contentType;
 }
 
 export function buildSortUrl(
@@ -56,10 +57,6 @@ export function getParentPath(path: string): string | null {
   const parts = path.replace(/\/$/, "").split("/");
   parts.pop();
   return parts.length > 0 ? parts.join("/") + "/" : "";
-}
-
-export function getFilePath(basePath: string, filename: string): string {
-  return basePath ? `${basePath}${filename}` : filename;
 }
 
 export function escapeXml(str: string): string {

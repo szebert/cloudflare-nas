@@ -1,8 +1,10 @@
 import type { Context } from "hono";
+import type { AuthenticatedUser } from "../auth/middleware";
+import { getShareLinksByPath } from "../db/share-links";
 import type { StorageBucket } from "../storage/interface";
 import type { BucketInfo } from "../types";
 import { renderDetailsPage } from "../ui/details-page";
-import { getBucketByBinding } from "../utils/buckets";
+import { getBucketByBinding, setCurrentBucket } from "../utils/buckets";
 import { detectContentType } from "../utils/mime-detection";
 import { getTheme } from "../utils/theme";
 
@@ -186,16 +188,20 @@ async function getFileDetails(
 }
 
 export async function detailsPageRoute(
-  c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[] } }>
+  c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[]; user?: AuthenticatedUser } }>
 ) {
   const buckets = c.get("buckets");
   const bucketBinding = c.req.param("bucket");
+  const user = c.get("user");
 
   // Get the bucket info
   const bucketInfo = getBucketByBinding(buckets, bucketBinding);
   if (!bucketInfo) {
     return c.text(`Bucket "${bucketBinding}" not found`, 404);
   }
+
+  // Set the bucket cookie
+  setCurrentBucket(c, bucketBinding);
 
   // Extract path from URL
   const url = new URL(c.req.url);
@@ -216,11 +222,30 @@ export async function detailsPageRoute(
     return c.text("File or folder not found", 404);
   }
 
+  // Get share links for this path (if user is authenticated)
+  let shareLinks: any[] = [];
+  if (user) {
+    const db = (c.env as any).DB as D1Database;
+    if (db) {
+      const allShareLinks = await getShareLinksByPath(db, bucketBinding, fileDetails.fullPath);
+      // Filter: show all if admin, otherwise only own links
+      shareLinks = user.is_admin
+        ? allShareLinks
+        : allShareLinks.filter((link) => link.created_by === user.id);
+    }
+  }
+
+  // Check for shareUrl query param (from newly created share link)
+  const shareUrl = url.searchParams.get("shareUrl") || undefined;
+
   const html = renderDetailsPage({
     bucketInfo,
     fileDetails,
     theme,
     buckets,
+    user,
+    shareLinks,
+    shareUrl,
   });
 
   return c.html(html);

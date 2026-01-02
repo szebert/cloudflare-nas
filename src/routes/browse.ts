@@ -8,7 +8,7 @@ import type {
   SortOrder,
 } from "../types";
 import { renderListing } from "../ui/listing-page";
-import { getBucketByBinding } from "../utils/buckets";
+import { getBucketByBinding, setCurrentBucket } from "../utils/buckets";
 import { getTheme } from "../utils/theme";
 
 export async function browseRoute(
@@ -22,6 +22,9 @@ export async function browseRoute(
   if (!currentBucket) {
     return c.text(`Bucket "${bucketBinding}" not found`, 404);
   }
+
+  // Set the bucket cookie
+  setCurrentBucket(c, bucketBinding);
 
   const url = new URL(c.req.url);
   // Remove /b/:bucket prefix from path

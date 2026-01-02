@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import type { BucketInfo } from "../types";
-import { getBucketByBinding } from "../utils/buckets";
+import { getBucketByBinding, setCurrentBucket } from "../utils/buckets";
 
 export async function uploadFilesRoute(
   c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[] } }>
@@ -13,6 +13,9 @@ export async function uploadFilesRoute(
   if (!bucketInfo) {
     return c.text(`Bucket "${bucketBinding}" not found`, 404);
   }
+
+  // Set the bucket cookie
+  setCurrentBucket(c, bucketBinding);
 
   // Parse multipart form data
   const formData = await c.req.formData();
@@ -73,6 +76,9 @@ export async function uploadFolderRoute(
   if (!bucketInfo) {
     return c.text(`Bucket "${bucketBinding}" not found`, 404);
   }
+
+  // Set the bucket cookie
+  setCurrentBucket(c, bucketBinding);
 
   // Parse multipart form data
   const formData = await c.req.formData();
