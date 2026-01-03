@@ -6,7 +6,7 @@ import type { AuthenticatedUser } from "../auth/middleware";
 import type { User } from "../db/users";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatDateString, formatISOString } from "../utils/format";
-import { renderHead } from "./components";
+import { renderAlert, renderHead } from "./components";
 
 export interface UsersPageOptions {
   currentBucket: BucketInfo;
@@ -21,9 +21,9 @@ export function renderUsersPage(options: UsersPageOptions): string {
   const { currentBucket, theme, currentUser, users, successMessage, errorMessage } = options;
 
   const alertHtml = successMessage
-    ? `<div class="alert alert-success">${escapeHtml(successMessage)}</div>`
+    ? renderAlert("success", escapeHtml(successMessage), "/settings/users")
     : errorMessage
-      ? `<div class="alert alert-error">${escapeHtml(errorMessage)}</div>`
+      ? renderAlert("error", escapeHtml(errorMessage), "/settings/users")
       : '';
 
   const userRows = users

@@ -6,7 +6,7 @@ import type { AuthenticatedUser } from "../auth/middleware";
 import type { ShareLink } from "../db/share-links";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatISOString } from "../utils/format";
-import { renderHead } from "./components";
+import { renderAlert, renderHead } from "./components";
 
 function buildBreadcrumbs(
   bucketBinding: string,
@@ -70,10 +70,11 @@ export function renderShareLinkDetailsPage(
 ): string {
   const { currentBucket, theme, user, shareLink, shareUrl, successMessage, errorMessage } = options;
 
+  const currentDetailsUrl = `/settings/links/${shareLink.id}`;
   const alertHtml = successMessage
-    ? `<div class="alert alert-success">${escapeHtml(successMessage)}</div>`
+    ? renderAlert("success", escapeHtml(successMessage), currentDetailsUrl)
     : errorMessage
-      ? `<div class="alert alert-error">${escapeHtml(errorMessage)}</div>`
+      ? renderAlert("error", escapeHtml(errorMessage), currentDetailsUrl)
       : '';
 
   const isExpired = shareLink.expires_at && shareLink.expires_at < Date.now();
@@ -94,7 +95,6 @@ export function renderShareLinkDetailsPage(
 
   const fileName = shareLink.r2_path.split('/').filter(Boolean).pop() || shareLink.r2_path;
   const breadcrumbs = buildBreadcrumbs(currentBucket.binding, shareLink.r2_path, shareLink.is_directory === 1);
-  const currentDetailsUrl = `/settings/links/${shareLink.id}`;
   const displayPath = "/" + (shareLink.r2_path || "");
 
   // Format expiration date for datetime-local input (YYYY-MM-DDTHH:mm)

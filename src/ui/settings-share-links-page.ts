@@ -6,7 +6,7 @@ import type { AuthenticatedUser } from "../auth/middleware";
 import type { ShareLink } from "../db/share-links";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatDateString, formatISOString } from "../utils/format";
-import { renderHead } from "./components";
+import { renderAlert, renderHead } from "./components";
 
 export interface ShareLinksPageOptions {
   currentBucket: BucketInfo;
@@ -21,9 +21,9 @@ export function renderShareLinksPage(options: ShareLinksPageOptions): string {
   const { currentBucket, theme, user, shareLinks, successMessage, errorMessage } = options;
 
   const alertHtml = successMessage
-    ? `<div class="alert alert-success">${escapeHtml(successMessage)}</div>`
+    ? renderAlert("success", escapeHtml(successMessage), "/settings/links")
     : errorMessage
-      ? `<div class="alert alert-error">${escapeHtml(errorMessage)}</div>`
+      ? renderAlert("error", escapeHtml(errorMessage), "/settings/links")
       : '';
 
   const linkRows = shareLinks

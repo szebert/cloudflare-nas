@@ -4,7 +4,7 @@
 
 import type { Theme } from "../types";
 import { escapeHtml, formatISOString } from "../utils/format";
-import { renderHead } from "./components";
+import { renderAlert, renderHead } from "./components";
 
 export interface SharePageOptions {
   theme: Theme;
@@ -104,7 +104,7 @@ ${renderHead({ title: "Protected Share", theme })}
       <h1>🔒 Protected Share</h1>
       <p>This shared content is password protected.</p>
       
-      ${error ? `<div class="alert alert-error">${escapeHtml(error)}</div>` : ""}
+      ${error ? renderAlert("error", escapeHtml(error), `/s/${token}`) : ""}
       
       <form method="POST" action="/s/${token}" class="container-form">
         <div class="form-group">

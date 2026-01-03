@@ -5,7 +5,7 @@
 
 import type { Theme } from "../types";
 import { escapeHtml } from "../utils/format";
-import { renderHead } from "./components";
+import { renderAlert, renderHead } from "./components";
 
 export interface ChangePasswordPageOptions {
   theme: Theme;
@@ -32,8 +32,8 @@ ${renderHead({ title: "Change Password", theme })}
       <h1>${title}</h1>
       <p class="container-subtitle">${subtitle}</p>
       
-      ${error ? `<div class="alert alert-error">${escapeHtml(error)}</div>` : ""}
-      ${success ? `<div class="alert alert-success">${escapeHtml(success)}</div>` : ""}
+      ${error ? renderAlert("error", escapeHtml(error), "/change-password") : ""}
+      ${success ? renderAlert("success", escapeHtml(success), "/change-password") : ""}
       
       <form method="POST" action="/change-password" class="container-form">
         <div class="form-group">

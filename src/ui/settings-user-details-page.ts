@@ -6,7 +6,7 @@ import type { AuthenticatedUser } from "../auth/middleware";
 import type { User } from "../db/users";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatISOString } from "../utils/format";
-import { renderHead } from "./components";
+import { renderAlert, renderHead } from "./components";
 
 export interface UserDetailsPageOptions {
   currentBucket: BucketInfo;
@@ -41,17 +41,17 @@ function buildBreadcrumbs(
 export function renderUserDetailsPage(options: UserDetailsPageOptions): string {
   const { currentBucket, theme, currentUser, targetUser, successMessage, errorMessage } = options;
 
+  const currentDetailsUrl = `/settings/users/${targetUser.id}`;
   const alertHtml = successMessage
-    ? `<div class="alert alert-success">${escapeHtml(successMessage)}</div>`
+    ? renderAlert("success", escapeHtml(successMessage), currentDetailsUrl)
     : errorMessage
-      ? `<div class="alert alert-error">${escapeHtml(errorMessage)}</div>`
+      ? renderAlert("error", escapeHtml(errorMessage), currentDetailsUrl)
       : '';
 
   const isAdmin = targetUser.is_admin === 1;
   const hasTempPw = targetUser.must_change_password === 1;
   const canResetPassword = !isAdmin; // Admin can only reset password for non-admin users
   const breadcrumbs = buildBreadcrumbs(currentBucket.binding, targetUser.username);
-  const currentDetailsUrl = `/settings/users/${targetUser.id}`;
   const settingsLink = `<a href="/settings" class="btn btn-action">⚙️ Settings</a>`;
 
   return `<!DOCTYPE html>

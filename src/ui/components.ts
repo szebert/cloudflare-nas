@@ -1,4 +1,5 @@
 import type { BucketInfo, Theme } from "../types";
+import { escapeHtml } from "../utils/format";
 
 export function renderHead(options: { title: string; theme: Theme }): string {
   const { title, theme } = options;
@@ -122,4 +123,14 @@ export function renderNewMenu(): string {
         </a>
       </div>
     </div>`;
+}
+
+export function renderAlert(type: "success" | "error", message: string, closeUrl?: string): string {
+  const closeButton = closeUrl
+    ? `<a href="${escapeHtml(closeUrl)}" class="alert-close" aria-label="Close">×</a>`
+    : '';
+  return `<div class="alert alert-${type}">
+    <span class="alert-message">${message}</span>
+    ${closeButton}
+  </div>`;
 }

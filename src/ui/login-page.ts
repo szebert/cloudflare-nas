@@ -3,7 +3,7 @@
  */
 
 import { escapeHtml } from "../utils/format";
-import { renderHead } from "./components";
+import { renderAlert, renderHead } from "./components";
 
 export interface LoginPageOptions {
   redirectUrl?: string;
@@ -32,7 +32,7 @@ ${renderHead({ title: "Cloudflare NAS - Login", theme })}
       <h1>Cloudflare NAS</h1>
       <p class="container-subtitle">Sign in to access your files</p>
       
-      ${error ? `<div class="error-message">${escapeHtml(error)}</div>` : ""}
+      ${error ? renderAlert("error", escapeHtml(error), "/login") : ""}
       
       <form method="POST" action="/login${redirectParam}" class="container-form">
         <div class="form-group">
@@ -78,7 +78,7 @@ ${renderHead({ title: "Cloudflare NAS - Setup", theme })}
       <h1>Cloudflare NAS</h1>
       <p class="container-subtitle">Welcome! Create your admin account to get started.</p>
       
-      ${error ? `<div class="error-message">${escapeHtml(error)}</div>` : ""}
+      ${error ? renderAlert("error", escapeHtml(error), "/login") : ""}
       
       <form method="POST" action="/setup" class="container-form">
         <div class="form-group">

@@ -1,7 +1,7 @@
 import type { AuthenticatedUser } from "../auth/middleware";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml } from "../utils/format";
-import { renderHead, renderThemeButtonGroup } from "./components";
+import { renderAlert, renderHead, renderThemeButtonGroup } from "./components";
 
 export interface SettingsPageOptions {
   currentBucket: BucketInfo;
@@ -17,9 +17,9 @@ export function renderSettingsPage(options: SettingsPageOptions): string {
   const themeButtonGroup = renderThemeButtonGroup(currentBucket.binding, theme);
 
   const alertHtml = successMessage
-    ? `<div class="alert alert-success">${escapeHtml(successMessage)}</div>`
+    ? renderAlert("success", escapeHtml(successMessage), "/settings")
     : errorMessage
-      ? `<div class="alert alert-error">${escapeHtml(errorMessage)}</div>`
+      ? renderAlert("error", escapeHtml(errorMessage), "/settings")
       : '';
 
   return `<!DOCTYPE html>

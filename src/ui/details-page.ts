@@ -4,6 +4,7 @@ import type { FileDetails } from "../routes/details";
 import type { BucketInfo, Theme } from "../types";
 import { escapeHtml, formatDateString, formatISOString, formatSize } from "../utils/format";
 import {
+  renderAlert,
   renderHead,
 } from "./components";
 
@@ -110,15 +111,15 @@ ${renderHead({ title: `${name} - Details`, theme })}
       <a href="#${deleteModalId}" class="btn btn-delete">🗑️ Delete</a>
     </div>
 
-    ${shareUrl ? `
-    <div class="alert alert-success">
-      <strong>Share link created!</strong> 
-      <div>
+    ${shareUrl ? renderAlert(
+      "success",
+      `<strong>Share link created!</strong> 
+      <div class="share-notice">
         <code class="code-block-small">${escapeHtml(shareUrl)}</code>
         <a href="${escapeHtml(shareUrl)}" target="_blank" class="btn btn-small btn-secondary btn-spacing-left">🔗 Open</a>
-      </div>
-    </div>
-    ` : ''}
+      </div>`,
+      currentDetailsUrl,
+    ) : ''}
 
     ${user && shareLinks.length > 0 ? `
     <div class="details-section">
