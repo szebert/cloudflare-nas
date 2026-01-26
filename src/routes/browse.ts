@@ -78,7 +78,7 @@ export async function browseRoute(
   }
 }
 
-async function listDirectory(
+export async function listDirectory(
   bucket: StorageBucket,
   prefix: string
 ): Promise<FileEntry[]> {
@@ -124,7 +124,7 @@ async function listDirectory(
   return entries;
 }
 
-function sortEntries(
+export function sortEntries(
   entries: FileEntry[],
   field: SortField,
   order: SortOrder

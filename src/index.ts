@@ -27,6 +27,7 @@ import {
 } from "./routes/settings";
 import {
   accessShareRoute,
+  browseShareRoute,
   createShareLinkRoute,
   deleteShareLinkRoute,
   downloadShareRoute,
@@ -77,9 +78,12 @@ app.post("/logout", logoutRoute);
 
 // Public share routes (no auth required, uses optional auth for buckets discovery)
 app.use("/s/*", optionalAuthMiddleware);
+// Download must come before wildcard route to not be caught by it
+app.get("/s/:token/download", downloadShareRoute);
+// Browse shared directories - wildcard catches subfolder paths
+app.get("/s/:token/*", browseShareRoute);
 app.get("/s/:token", accessShareRoute);
 app.post("/s/:token", verifySharePasswordRoute);
-app.get("/s/:token/download", downloadShareRoute);
 
 // Change password routes (requires auth but allowed when must_change_password is set)
 app.get("/change-password", authMiddleware, showChangePasswordRoute);

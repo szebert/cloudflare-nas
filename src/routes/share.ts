@@ -13,12 +13,18 @@ import {
   isShareLinkValid,
   verifyShareLinkPassword,
 } from "../db/share-links";
-import type { BucketInfo } from "../types";
+import type { BucketInfo, SortField, SortOrder } from "../types";
+import { renderShareListing } from "../ui/share-listing-page";
 import { renderSharePage, renderSharePasswordPage } from "../ui/share-page";
 import { getBucketByBinding, setCurrentBucket } from "../utils/buckets";
 import { formatContentDisposition } from "../utils/format";
+import {
+  buildSharePath,
+  isPathWithinShare
+} from "../utils/share";
 import { getTheme } from "../utils/theme";
 import { getOrigin } from "../utils/url";
+import { listDirectory, sortEntries } from "./browse";
 
 /**
  * POST /b/:bucket/share - Create a new share link
@@ -178,20 +184,8 @@ export async function accessShareRoute(
 
   // Handle directory vs file
   if (shareLink.is_directory) {
-    // For directories, show a listing
-    return c.html(
-      renderSharePage({
-        shareLink: {
-          token: shareLink.token,
-          r2_path: shareLink.r2_path,
-          is_directory: true,
-          expires_at: shareLink.expires_at,
-          max_downloads: shareLink.max_downloads,
-          download_count: shareLink.download_count,
-        },
-        theme,
-      })
-    );
+    // For directories, redirect to browse route
+    return c.redirect(`/s/${token}/`);
   }
 
   // For files, redirect to download
@@ -282,12 +276,25 @@ export async function downloadShareRoute(
 
   // For directory shares, allow downloading files within the directory
   if (shareLink.is_directory) {
-    const requestedPath = url.searchParams.get("path");
-    if (requestedPath) {
-      // Ensure the requested path is within the share directory
-      const normalizedBase = shareLink.r2_path.replace(/\/$/, "");
-      const normalizedRequest = requestedPath.replace(/^\//, "");
-      filePath = `${normalizedBase}/${normalizedRequest}`;
+    const requestedRelativePath = url.searchParams.get("path");
+    if (requestedRelativePath) {
+      // Validate that the requested path is within the share scope
+      const fullRequestedPath = buildSharePath(
+        shareLink.r2_path,
+        requestedRelativePath
+      );
+
+      if (!isPathWithinShare(shareLink.r2_path, fullRequestedPath)) {
+        return c.html(
+          renderSharePage({
+            error: "Access denied: Path is outside the shared directory scope.",
+            theme,
+          }),
+          403
+        );
+      }
+
+      filePath = fullRequestedPath;
     } else {
       // Can't download a directory directly
       return c.html(
@@ -324,5 +331,142 @@ export async function downloadShareRoute(
   }
 
   return new Response(object.body, { headers });
+}
+
+/**
+ * GET /s/:token/* - Browse shared directory (public)
+ */
+export async function browseShareRoute(
+  c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[] } }>
+) {
+  const token = c.req.param("token");
+  const db = (c.env as any).DB as D1Database;
+  const buckets = c.get("buckets");
+  const theme = getTheme(c);
+
+  const shareLink = await getShareLinkByToken(db, token);
+  if (!shareLink) {
+    return c.html(renderSharePage({ error: "Share link not found", theme }), 404);
+  }
+
+  // Check validity
+  const validity = isShareLinkValid(shareLink);
+  if (!validity.valid) {
+    return c.html(renderSharePage({ error: validity.reason || "Link is invalid", theme }), 410);
+  }
+
+  // Check for password
+  if (shareLink.password_hash) {
+    const passwordCookie = c.req.header("Cookie")?.includes(`share_${token}=verified`);
+    if (!passwordCookie) {
+      return c.redirect(`/s/${token}`);
+    }
+  }
+
+  // Only allow browsing directories
+  if (!shareLink.is_directory) {
+    return c.redirect(`/s/${token}/download`);
+  }
+
+  // Get the bucket
+  const bucketInfo = getBucketByBinding(buckets, shareLink.r2_bucket);
+  if (!bucketInfo) {
+    return c.html(renderSharePage({ error: "Storage not available", theme }), 500);
+  }
+
+  // Extract relative path from URL by parsing the pathname directly
+  // This is more reliable than using Hono's wildcard param
+  const url = new URL(c.req.url);
+  const pathPrefix = `/s/${token}/`;
+  let relativePath = "";
+
+  if (url.pathname.startsWith(pathPrefix)) {
+    relativePath = decodeURIComponent(url.pathname.slice(pathPrefix.length));
+  }
+
+  // Normalize relative path - ensure it ends with / for directories
+  if (relativePath && !relativePath.endsWith("/")) {
+    relativePath += "/";
+  }
+
+  // Build the full R2 path
+  // When at root (relativePath is ""), fullPath will be the sharePath itself
+  // When in a subfolder, fullPath will be sharePath + "/" + relativePath
+  const fullPath = buildSharePath(shareLink.r2_path, relativePath);
+
+  // Validate that the requested path is within the share scope
+  if (!isPathWithinShare(shareLink.r2_path, fullPath)) {
+    return c.html(
+      renderSharePage({
+        error: "Access denied: Path is outside the shared directory scope.",
+        theme,
+      }),
+      403
+    );
+  }
+
+  // Ensure the path ends with / for directory listing
+  // This is critical: listDirectory needs the prefix to end with / to list contents
+  // When sharePath is "a" and relativePath is "", fullPath is "a", so listPrefix becomes "a/"
+  // This ensures we list the CONTENTS of "a", not "a" itself or its siblings
+  // The trailing slash tells R2 to list the directory contents, not the directory itself
+  let listPrefix = fullPath.endsWith("/") ? fullPath : `${fullPath}/`;
+
+  // Double-check: if listPrefix doesn't start with sharePath + "/", something is wrong
+  // This shouldn't happen, but it's a safety check
+  const normalizedSharePath = shareLink.r2_path.replace(/\/$/, "");
+  if (!listPrefix.startsWith(normalizedSharePath + "/") && listPrefix !== normalizedSharePath + "/") {
+    // This should never happen due to validation above, but just in case
+    listPrefix = `${normalizedSharePath}/${relativePath || ""}`.replace(/\/+$/, "") + "/";
+  }
+
+  // Get sorting parameters (reuse url from above)
+  const sortField = (url.searchParams.get("sort") as SortField) || "name";
+  const sortOrder = (url.searchParams.get("order") as SortOrder) || "asc";
+
+  try {
+    // List directory contents
+    // Note: listDirectory expects a prefix that ends with / to list directory contents
+    // When sharePath is "a" and we're at root, listPrefix is "a/", which should
+    // only return contents of "a/", not "a" itself or siblings
+    const entries = await listDirectory(bucketInfo.bucket, listPrefix);
+
+    // The listDirectory function should already filter correctly based on the prefix,
+    // but we need to ensure we're not getting the share folder itself or siblings.
+    // When at root (relativePath is empty), we should only see contents of the share folder.
+    // The prefix "a/" should prevent "a" and "asdf" from appearing, but let's be extra safe.
+    const filteredEntries = entries;
+
+    const sortedEntries = sortEntries(filteredEntries, sortField, sortOrder);
+    const totalSize = filteredEntries.reduce(
+      (sum, e) => sum + (e.isDirectory ? 0 : e.size),
+      0
+    );
+
+    // Render share listing
+    const htmlContent = renderShareListing({
+      token: shareLink.token,
+      sharePath: shareLink.r2_path,
+      relativePath,
+      entries: sortedEntries,
+      theme,
+      sortField,
+      sortOrder,
+      totalSize,
+      expiresAt: shareLink.expires_at,
+      maxDownloads: shareLink.max_downloads,
+      downloadCount: shareLink.download_count,
+    });
+
+    return c.html(htmlContent);
+  } catch (error) {
+    return c.html(
+      renderSharePage({
+        error: `Failed to list directory: ${String(error)}`,
+        theme,
+      }),
+      500
+    );
+  }
 }
 
