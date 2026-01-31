@@ -1,7 +1,12 @@
 import { Hono } from "hono";
 import type { AuthenticatedUser } from "./auth/middleware";
 import { authMiddleware, optionalAuthMiddleware } from "./auth/middleware";
-import { loginHandlerRoute, loginPageRoute, logoutRoute, setupRoute } from "./routes/auth";
+import {
+  loginHandlerRoute,
+  loginPageRoute,
+  logoutRoute,
+  setupRoute,
+} from "./routes/auth";
 import { browseRoute } from "./routes/browse";
 import { detailsHandlerRoute, detailsPageRoute } from "./routes/details";
 import { downloadRoute } from "./routes/download";
@@ -60,6 +65,21 @@ app.use("*", async (c, next) => {
 
 // Handle .well-known requests (Chrome DevTools, etc.)
 app.get("/.well-known/*", (c) => c.body(null, 204));
+
+// WebDAV OPTIONS discovery - Windows WebDAV client sends OPTIONS to root first
+// to discover WebDAV capabilities before accessing the actual WebDAV path
+// This must respond with DAV headers so Windows knows WebDAV is available
+app.options("/", (c) => {
+  console.log("[WEBDAV] OPTIONS / - returning DAV discovery response");
+  const headers = new Headers();
+  headers.set("DAV", "1, 2");
+  headers.set(
+    "Allow",
+    "OPTIONS, GET, HEAD, PUT, DELETE, PROPFIND, MKCOL, MOVE, COPY, LOCK, UNLOCK, PROPPATCH",
+  );
+  headers.set("MS-Author-Via", "DAV");
+  return new Response(null, { status: 200, headers });
+});
 
 app.get("/style.css", stylesRoute);
 

@@ -22,7 +22,7 @@ const SESSION_COOKIE_NAME = "session_token";
  * Extract Basic Auth credentials from request
  */
 function extractBasicAuth(
-  c: Context
+  c: Context,
 ): { username: string; password: string } | null {
   const authHeader = c.req.header("Authorization");
   if (!authHeader || !authHeader.startsWith("Basic ")) {
@@ -48,7 +48,7 @@ export async function authMiddleware(
     Bindings: Env;
     Variables: { buckets: any[]; user?: AuthenticatedUser };
   }>,
-  next: Next
+  next: Next,
 ) {
   const log = logger();
   const db = (c.env as any).DB as D1Database;
@@ -77,9 +77,11 @@ export async function authMiddleware(
         if (user.must_change_password === 1) {
           const currentPath = new URL(c.req.url).pathname;
           // Allow access to password change endpoint and logout
-          if (!currentPath.startsWith("/change-password") &&
+          if (
+            !currentPath.startsWith("/change-password") &&
             !currentPath.startsWith("/logout") &&
-            !currentPath.startsWith("/styles")) {
+            !currentPath.startsWith("/styles")
+          ) {
             return c.redirect("/change-password");
           }
         }
@@ -96,7 +98,7 @@ export async function authMiddleware(
     const user = await verifyUserCredentials(
       db,
       basicAuth.username,
-      basicAuth.password
+      basicAuth.password,
     );
     if (user) {
       c.set("user", {
@@ -115,12 +117,58 @@ export async function authMiddleware(
   // For browser requests, redirect to login
   // For API/WebDAV, return 401
   const acceptHeader = c.req.header("Accept") || "";
-  const isBrowserRequest =
-    acceptHeader.includes("text/html") ||
-    !acceptHeader.includes("application/json");
+  const method = c.req.method;
+  const path = new URL(c.req.url).pathname;
 
-  if (isBrowserRequest) {
-    // Extract only the pathname (not the full URL) to ensure redirects stay in the same environment
+  // WebDAV methods that indicate a WebDAV client
+  const webdavMethods = [
+    "PROPFIND",
+    "PROPPATCH",
+    "MKCOL",
+    "COPY",
+    "MOVE",
+    "LOCK",
+    "UNLOCK",
+    "OPTIONS",
+  ];
+  const isWebDavMethod = webdavMethods.includes(method);
+  const isWebDavPath = path.startsWith("/webdav/");
+
+  // It's a WebDAV/API request if:
+  // - Uses a WebDAV-specific method, OR
+  // - Targets the /webdav/ path, OR
+  // - Sends Accept: application/json, OR
+  // - Has a Depth header (WebDAV), OR
+  // - User-Agent contains "Microsoft-WebDAV" or similar
+  const userAgent = c.req.header("User-Agent") || "";
+  const hasDepthHeader = !!c.req.header("Depth");
+  const isWebDavClient =
+    userAgent.includes("Microsoft-WebDAV") ||
+    userAgent.includes("WebDAVFS") ||
+    userAgent.includes("davfs") ||
+    userAgent.includes("Cyberduck");
+
+  const isApiOrWebDavRequest =
+    isWebDavMethod ||
+    isWebDavPath ||
+    acceptHeader.includes("application/json") ||
+    hasDepthHeader ||
+    isWebDavClient;
+
+  log.debug("Auth check - no valid auth found", {
+    method,
+    path,
+    isWebDavMethod,
+    isWebDavPath,
+    hasDepthHeader,
+    isWebDavClient,
+    isApiOrWebDavRequest,
+    acceptHeader: acceptHeader.substring(0, 50),
+    userAgent: userAgent.substring(0, 50),
+  });
+
+  if (!isApiOrWebDavRequest && acceptHeader.includes("text/html")) {
+    // Browser request - redirect to login
     const url = new URL(c.req.url);
     const currentPath = url.pathname + url.search;
     return c.redirect(`/login?redirect=${encodeURIComponent(currentPath)}`);
@@ -140,7 +188,7 @@ export async function optionalAuthMiddleware(
     Bindings: Env;
     Variables: { buckets: any[]; user?: AuthenticatedUser };
   }>,
-  next: Next
+  next: Next,
 ) {
   const db = (c.env as any).DB as D1Database;
 
@@ -172,7 +220,7 @@ export async function optionalAuthMiddleware(
     const user = await verifyUserCredentials(
       db,
       basicAuth.username,
-      basicAuth.password
+      basicAuth.password,
     );
     if (user) {
       c.set("user", {

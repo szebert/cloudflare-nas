@@ -8,13 +8,13 @@
     "generate-types": "wrangler types"
   },
   "dependencies": {
-    "hono": "^4.11.3"
+    "hono": "^4.11.7"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3",
+    "@types/node": "^25.1.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "wrangler": "^4.54.0"
+    "wrangler": "^4.61.1"
   },
-  "packageManager": "pnpm@10.26.2"
+  "packageManager": "pnpm@10.28.2"
 }
