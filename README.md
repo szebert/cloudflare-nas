@@ -61,10 +61,6 @@ A lightweight, self-hosted file browser for Cloudflare R2 storage buckets. Brows
 - [ ] Multi-part upload for large files
 - [ ] PDF previews
 - [ ] Granular share permissions (read/write per share)
-- [ ] npm package distribution
-  - Quick setup via `pnpm dlx cloudflare-nas`
-  - CLI tool for initialization
-  - Template-based project generation
 
 ## Mounting as a Network Drive
 
@@ -131,21 +127,42 @@ The WebDAV implementation supports:
 
 ## Getting Started
 
-### Prerequisites
+### Quick Setup (Recommended)
+
+The fastest way to get started is using the CLI:
+
+```bash
+pnpm dlx cloudflare-nas@latest
+```
+
+This interactive CLI will:
+
+1. Check your Cloudflare authentication (or guide you to log in)
+2. Create a D1 database for user management
+3. Create or select an R2 bucket for storage
+4. Deploy the worker and give you a URL
+
+**That's it!** Visit the URL to create your admin account and start uploading files.
+
+### Manual Setup
+
+If you prefer to set things up manually:
+
+#### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+)
 - [Cloudflare account](https://dash.cloudflare.com/sign-up) with R2 enabled
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
 
-### Setup
+#### Steps
 
-1. **Install dependencies:**
+1. **Clone and install:**
 
    ```bash
-   npm install
+   git clone https://github.com/your-username/cloudflare-nas
+   cd cloudflare-nas/packages/worker
+   pnpm install
    ```
-
-   > **Note:** In the future, you'll be able to quickly set up a new project using `pnpm dlx cloudflare-nas`. Stay tuned!
 
 2. **Create an R2 bucket** (if you don't have one):
 
@@ -153,7 +170,7 @@ The WebDAV implementation supports:
    npx wrangler r2 bucket create my-bucket
    ```
 
-3. **Configure your bucket** in `wrangler.json`:
+3. **Configure your bucket** in `wrangler.jsonc`:
 
    ```json
    {
@@ -172,53 +189,52 @@ The WebDAV implementation supports:
    # Create the D1 database
    npx wrangler d1 create nas-db
 
-   # Update wrangler.json with the database_id from the output above
+   # Update wrangler.jsonc with the database_id from the output above
    # Then run the schema
-   npx wrangler d1 execute nas-db --file=schema.sql
+   npx wrangler d1 execute nas-db --remote --file=schema.sql
    ```
 
 5. **Run locally:**
 
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
    On first run, visit the login page and you'll be prompted to create your admin account.
 
 6. **Deploy:**
    ```bash
-   npm run deploy
+   pnpm deploy
    ```
 
 ## Project Structure
 
+This is a monorepo with two packages:
+
 ```
-src/
-├── index.ts          # App entry, routes, auth middleware
-├── types.ts          # TypeScript types
-├── routes/
-│   ├── browse.ts     # Directory listing
-│   ├── details.ts    # File/folder details, preview, edit, metadata
-│   ├── download.ts   # File downloads
-│   ├── file.ts       # File creation
-│   ├── folder.ts     # Folder creation
-│   ├── upload.ts     # File and folder uploads
-│   ├── webdav.ts     # WebDAV protocol implementation
-│   └── ...
-├── storage/
-│   ├── interface.ts  # Generic storage abstraction
-│   └── r2-adapter.ts # R2 storage implementation
-├── ui/
-│   ├── components.ts # UI components (switchers, menus)
-│   ├── details-page.ts # File details and preview page
-│   └── listing-page.ts # Main directory listing page
-├── styles/
-│   ├── base.css      # Base styles
-│   ├── dark.css      # Dark theme
-│   └── light.css     # Light theme
-└── utils/
-    ├── buckets.ts    # Bucket discovery
-    ├── format.ts     # Formatting utilities
-    ├── logger.ts     # Structured logging
-    └── mime-detection.ts # MIME type detection (magic bytes)
+cloudflare-nas/
+├── packages/
+│   ├── cli/                  # CLI tool (published as cloudflare-nas)
+│   │   ├── src/
+│   │   │   ├── index.ts      # CLI entry point
+│   │   │   ├── auth/         # Cloudflare authentication
+│   │   │   ├── prompts/      # Interactive prompts
+│   │   │   ├── resources/    # D1/R2 resource creation
+│   │   │   ├── deploy/       # Worker deployment
+│   │   │   └── ui/           # CLI output formatting
+│   │   └── templates/        # Bundled worker code
+│   │
+│   └── worker/               # Cloudflare Worker (the NAS app)
+│       ├── src/
+│       │   ├── index.ts      # App entry, routes
+│       │   ├── auth/         # Authentication middleware
+│       │   ├── routes/       # HTTP route handlers
+│       │   ├── storage/      # R2 storage abstraction
+│       │   ├── ui/           # HTML page templates
+│       │   └── utils/        # Utilities (logging, MIME detection)
+│       ├── schema.sql        # D1 database schema
+│       └── wrangler.jsonc    # Wrangler configuration
+│
+├── package.json              # Workspace root
+└── pnpm-workspace.yaml       # PNPM workspace config
 ```

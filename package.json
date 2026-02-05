@@ -1,20 +1,16 @@
 {
-  "name": "cloudflare-nas",
-  "description": "Classic directory listing for Cloudflare R2 Storage",
+  "name": "cloudflare-nas-monorepo",
+  "description": "Cloudflare NAS - Personal cloud storage on Cloudflare",
   "scripts": {
-    "dev": "wrangler dev --remote",
-    "dev-https": "wrangler dev --remote --local-protocol=https --https-cert-path=wrangler-dev-cert.pem --https-key-path=wrangler-dev-key.pem",
-    "deploy": "wrangler deploy",
-    "generate-types": "wrangler types"
-  },
-  "dependencies": {
-    "hono": "^4.11.7"
+    "dev": "pnpm --filter @cloudflare-nas/worker dev",
+    "deploy": "pnpm --filter @cloudflare-nas/worker deploy",
+    "build:cli": "pnpm --filter cloudflare-nas build",
+    "build": "pnpm -r build"
   },
   "devDependencies": {
-    "@types/node": "^25.1.0",
+    "@types/node": "^22.10.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "wrangler": "^4.61.1"
+    "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@10.28.2"
 }

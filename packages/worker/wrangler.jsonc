@@ -1,0 +1,59 @@
+// Cloudflare NAS - Wrangler Configuration
+// Documentation: https://developers.cloudflare.com/workers/wrangler/configuration/
+//
+// QUICK START:
+// 1. Create your D1 database:  npx wrangler d1 create my-nas-db
+// 2. Create your R2 bucket:    npx wrangler r2 bucket create my-storage
+// 3. Update the values below with your database_id and bucket_name
+// 4. Run migrations:           npx wrangler d1 execute my-nas-db --remote --file=schema.sql
+// 5. Deploy:                   npx wrangler deploy
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // Your worker name - this becomes part of your URL: <name>.<subdomain>.workers.dev
+  "name": "cloudflare-nas",
+
+  "main": "src/index.ts",
+  "compatibility_date": "2025-02-04",
+
+  // R2 STORAGE BUCKETS
+  // Add one or more buckets. The "binding" is how you reference it in code.
+  // Run: npx wrangler r2 bucket create <bucket_name>
+  "r2_buckets": [
+    {
+      "binding": "my-files",              // Name used in the app's bucket selector
+      "bucket_name": "CHANGE-ME"          // Your actual R2 bucket name
+      // "preview_bucket_name": "..."     // Optional: different bucket for local dev
+    }
+    // Add more buckets as needed:
+    // {
+    //   "binding": "photos",
+    //   "bucket_name": "my-photos-bucket"
+    // }
+  ],
+
+  // D1 DATABASE (required for user authentication)
+  // Run: npx wrangler d1 create <database_name>
+  // Then copy the database_id from the output
+  "d1_databases": [
+    {
+      "binding": "DB",                           // Don't change this - code expects "DB"
+      "database_name": "CHANGE-ME",              // Your D1 database name
+      "database_id": "CHANGE-ME-UUID-HERE"       // UUID from 'wrangler d1 create' output
+    }
+  ],
+
+  // Optional: Enable Cloudflare's logging and tracing
+  "observability": {
+    "enabled": true
+  },
+
+  // Required: Import CSS files as text modules
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["**/*.css"],
+      "fallthrough": true
+    }
+  ]
+}

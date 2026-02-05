@@ -1,16 +1,11 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "esnext",
-    "lib": ["esnext"],
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "types": ["./worker-configuration.d.ts"],
-    "noEmit": true,
-    "isolatedModules": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "esModuleInterop": true
+    "noEmit": true
   },
-  "include": ["src"]
+  "references": [
+    { "path": "./packages/worker" },
+    { "path": "./packages/cli" }
+  ],
+  "files": []
 }

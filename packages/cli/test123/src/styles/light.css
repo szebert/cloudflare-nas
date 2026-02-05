@@ -1,0 +1,39 @@
+:root {
+  /* Background colors */
+  --bg-primary: #fff;
+  --bg-secondary: #fff;
+  --bg-tertiary: #f8f8f8;
+  --bg-hover: #f0f0f0;
+  --bg-active: #e8f4fc;
+
+  /* Text colors */
+  --text-primary: #000;
+  --text-secondary: #666;
+  --link: #0000cc;
+
+  /* Border colors */
+  --border: #ddd;
+  --border-input: #ccc;
+
+  /* Accent colors */
+  --accent: #4a90e2;
+  --accent-hover: #357abd;
+  --accent-text: #fff;
+
+  /* Semantic colors */
+  --danger: #dc3545;
+  --danger-hover: #c82333;
+  --success: #5cb85c;
+  --success-hover: #4cae4c;
+  --warning: #e67e22;
+  --warning-hover: #d46a1a;
+  --cancel: #666;
+
+  /* Scrollbar colors */
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(128, 128, 128, 0.3);
+  --scrollbar-thumb-hover: rgba(128, 128, 128, 0.5);
+
+  /* Component-specific */
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}

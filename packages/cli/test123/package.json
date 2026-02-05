@@ -1,0 +1,16 @@
+{
+  "name": "cloudflare-nas-worker",
+  "description": "Cloudflare NAS Worker - Classic directory listing for Cloudflare R2 Storage",
+  "scripts": {
+    "dev": "wrangler dev --remote",
+    "dev-https": "wrangler dev --remote --local-protocol=https --https-cert-path=wrangler-dev-cert.pem --https-key-path=wrangler-dev-key.pem",
+    "deploy": "wrangler deploy",
+    "generate-types": "wrangler types"
+  },
+  "dependencies": {
+    "hono": "^4.11.7"
+  },
+  "devDependencies": {
+    "wrangler": "^4.61.1"
+  }
+}

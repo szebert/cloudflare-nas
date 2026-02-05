@@ -1,0 +1,783 @@
+import type { Context } from "hono";
+import type { AuthenticatedUser } from "../auth/middleware";
+import { getShareLinksByPath } from "../db/share-links";
+import type { StorageBucket } from "../storage/interface";
+import type { BucketInfo } from "../types";
+import { renderDetailsPage } from "../ui/details-page";
+import { getBucketByBinding, setCurrentBucket } from "../utils/buckets";
+import { detectContentType } from "../utils/mime-detection";
+import { getTheme } from "../utils/theme";
+
+const MAX_TEXT_PREVIEW_SIZE = 1024 * 1024; // 1MB
+
+export interface HttpMetadata {
+  contentType?: string;
+  contentLanguage?: string;
+  contentDisposition?: string;
+  contentEncoding?: string;
+  cacheControl?: string;
+  cacheExpiry?: string; // ISO string format for display
+}
+
+export interface FileDetails {
+  name: string;
+  fullPath: string;
+  parentPath: string;
+  isDirectory: boolean;
+  size: number;
+  modified: Date | null;
+  contentType: string | null;
+  customMetadata: Record<string, string>;
+  httpMetadata: HttpMetadata;
+  storageClass: string | null;
+  textContent?: string | null;
+  isTooLargeForTextPreview?: boolean;
+  isImage?: boolean;
+  isVideo?: boolean;
+  canEditFile: boolean;
+}
+
+async function getFileDetails(
+  bucket: StorageBucket,
+  filePath: string
+): Promise<FileDetails | null> {
+  const isDirectory = filePath.endsWith("/");
+  const cleanPath = isDirectory ? filePath.slice(0, -1) : filePath;
+
+  if (isDirectory) {
+    // For directories, list contents to calculate size
+    const prefix = cleanPath ? `${cleanPath}/` : "";
+    const listed = await bucket.list({
+      prefix,
+      delimiter: "/",
+      include: ["httpMetadata", "customMetadata"],
+    });
+
+    // Calculate total size of all files in directory
+    let totalSize = 0;
+    for (const obj of listed.objects) {
+      totalSize += obj.size;
+    }
+
+    // Extract name and parent path
+    const lastSlash = cleanPath.lastIndexOf("/");
+    const name = lastSlash >= 0 ? cleanPath.slice(lastSlash + 1) : cleanPath;
+    const parentPath = lastSlash >= 0 ? cleanPath.slice(0, lastSlash + 1) : "";
+
+    return {
+      name,
+      fullPath: cleanPath,
+      parentPath,
+      isDirectory: true,
+      size: totalSize,
+      modified: null, // Directories don't have a modified date in R2
+      contentType: null,
+      customMetadata: {},
+      httpMetadata: {},
+      storageClass: null,
+      canEditFile: false,
+    };
+  } else {
+    // For files, use head() to get metadata without downloading the body
+    const head = await bucket.head(cleanPath);
+
+    if (!head) {
+      return null;
+    }
+
+    // Extract name and parent path
+    const lastSlash = cleanPath.lastIndexOf("/");
+    const name = lastSlash >= 0 ? cleanPath.slice(lastSlash + 1) : cleanPath;
+    const parentPath = lastSlash >= 0 ? cleanPath.slice(0, lastSlash + 1) : "";
+
+    const contentType = head.httpMetadata?.contentType || null;
+    let textContent: string | null = null;
+    let isTooLargeForTextPreview = false;
+
+    // Skip preview for 0-byte files
+    const isEmpty = head.size === 0;
+
+    // Check if it's a video or image (priority: video > image > text)
+    let isVideoFile = false;
+    let isImageFile = false;
+    if (!isEmpty) {
+      const detectedType = await detectContentType({
+        contentType,
+        filePath: cleanPath,
+        bucket,
+        fileSize: head.size,
+      });
+
+      if (detectedType) {
+        isVideoFile = detectedType.startsWith("video/");
+        // Only check for image if it's not a video
+        if (!isVideoFile) {
+          isImageFile = detectedType.startsWith("image/");
+        }
+      }
+    }
+
+    // Try to fetch text content for non-video, non-image files
+    // Only try for files up to 1MB to avoid memory issues
+    if (!isVideoFile && !isImageFile && !isEmpty) {
+      if (head.size > MAX_TEXT_PREVIEW_SIZE) {
+        isTooLargeForTextPreview = true;
+      } else {
+        try {
+          const object = await bucket.get(cleanPath);
+          if (object && object.body) {
+            // Try to decode as text - if it fails, textContent stays null
+            const arrayBuffer = await object.arrayBuffer();
+            const decoder = new TextDecoder("utf-8", {
+              fatal: false,
+              ignoreBOM: false,
+            });
+            textContent = decoder.decode(arrayBuffer);
+          }
+        } catch (error) {
+          // If we can't read the file as text, just leave textContent as null
+          textContent = null;
+        }
+      }
+    }
+
+    const canEditFile =
+      !isDirectory && !isTooLargeForTextPreview && !isImageFile && !isVideoFile;
+
+    // Extract httpMetadata, converting Date objects to ISO strings for cacheExpiry
+    const httpMetadata: HttpMetadata = {};
+    if (head.httpMetadata) {
+      if (head.httpMetadata.contentType) {
+        httpMetadata.contentType = head.httpMetadata.contentType;
+      }
+      if (head.httpMetadata.contentLanguage) {
+        httpMetadata.contentLanguage = head.httpMetadata.contentLanguage;
+      }
+      if (head.httpMetadata.contentDisposition) {
+        httpMetadata.contentDisposition = head.httpMetadata.contentDisposition;
+      }
+      if (head.httpMetadata.contentEncoding) {
+        httpMetadata.contentEncoding = head.httpMetadata.contentEncoding;
+      }
+      if (head.httpMetadata.cacheControl) {
+        httpMetadata.cacheControl = head.httpMetadata.cacheControl;
+      }
+      if (head.httpMetadata.cacheExpiry) {
+        httpMetadata.cacheExpiry = head.httpMetadata.cacheExpiry.toISOString();
+      }
+    }
+
+    return {
+      name,
+      fullPath: cleanPath,
+      parentPath,
+      isDirectory: false,
+      size: head.size,
+      modified: head.uploaded,
+      contentType,
+      customMetadata: head.customMetadata || {},
+      httpMetadata,
+      storageClass: head.storageClass || null,
+      textContent,
+      isTooLargeForTextPreview,
+      isImage: isImageFile,
+      isVideo: isVideoFile,
+      canEditFile,
+    };
+  }
+}
+
+export async function detailsPageRoute(
+  c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[]; user?: AuthenticatedUser } }>
+) {
+  const buckets = c.get("buckets");
+  const bucketBinding = c.req.param("bucket");
+  const user = c.get("user");
+
+  // Get the bucket info
+  const bucketInfo = getBucketByBinding(buckets, bucketBinding);
+  if (!bucketInfo) {
+    return c.text(`Bucket "${bucketBinding}" not found`, 404);
+  }
+
+  // Set the bucket cookie
+  setCurrentBucket(c, bucketBinding);
+
+  // Extract path from URL
+  const url = new URL(c.req.url);
+  const filePath = decodeURIComponent(url.pathname).replace(
+    `/b/${bucketBinding}/details/`,
+    ""
+  );
+  const theme = getTheme(c);
+
+  if (!filePath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Get file details
+  const fileDetails = await getFileDetails(bucketInfo.bucket, filePath);
+
+  if (!fileDetails) {
+    return c.text("File or folder not found", 404);
+  }
+
+  // Get share links for this path (if user is authenticated)
+  let shareLinks: any[] = [];
+  if (user) {
+    const db = (c.env as any).DB as D1Database;
+    if (db) {
+      const allShareLinks = await getShareLinksByPath(db, bucketBinding, fileDetails.fullPath);
+      // Filter: show all if admin, otherwise only own links
+      shareLinks = user.is_admin
+        ? allShareLinks
+        : allShareLinks.filter((link) => link.created_by === user.id);
+    }
+  }
+
+  // Check for shareUrl query param (from newly created share link)
+  const shareUrl = url.searchParams.get("shareUrl") || undefined;
+
+  const html = renderDetailsPage({
+    bucketInfo,
+    fileDetails,
+    theme,
+    buckets,
+    user,
+    shareLinks,
+    shareUrl,
+  });
+
+  return c.html(html);
+}
+
+export async function detailsHandlerRoute(
+  c: Context<{ Bindings: Env; Variables: { buckets: BucketInfo[] } }>
+) {
+  const buckets = c.get("buckets");
+  const bucketBinding = c.req.param("bucket");
+
+  // Get the bucket info
+  const bucketInfo = getBucketByBinding(buckets, bucketBinding);
+  if (!bucketInfo) {
+    return c.text(`Bucket "${bucketBinding}" not found`, 404);
+  }
+
+  // Parse form data
+  const formData = await c.req.formData();
+  const action = formData.get("action") as string;
+
+  switch (action) {
+    case "rename":
+      return handleRename(c, bucketInfo, formData);
+    case "delete":
+      return handleDelete(c, bucketInfo, formData);
+    case "addMetadata":
+      return handleAddMetadata(c, bucketInfo, formData);
+    case "updateMetadata":
+      return handleUpdateMetadata(c, bucketInfo, formData);
+    case "addHttpMetadata":
+      return handleAddHttpMetadata(c, bucketInfo, formData);
+    case "updateHttpMetadata":
+      return handleUpdateHttpMetadata(c, bucketInfo, formData);
+    case "edit":
+      return handleEdit(c, bucketInfo, formData);
+    default:
+      return c.text(`Unknown action: ${action}`, 400);
+  }
+}
+
+async function handleRename(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData
+) {
+  const oldFullPath = formData.get("oldFullPath") as string;
+  const newFullPath = formData.get("newFullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+
+  if (!oldFullPath || !newFullPath) {
+    return c.text("Both old and new paths are required", 400);
+  }
+
+  // Normalize paths: remove leading/trailing slashes and normalize
+  const normalizePath = (path: string): string => {
+    return path.replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
+  };
+
+  const normalizedOldPath = normalizePath(oldFullPath);
+  const normalizedNewPath = normalizePath(newFullPath);
+
+  // If paths are the same, redirect to the new details page
+  if (normalizedOldPath === normalizedNewPath) {
+    const redirectPath = `/b/${bucketInfo.binding}/details/${normalizedNewPath}${isDirectory ? "/" : ""}`;
+    return c.redirect(redirectPath, 303);
+  }
+
+  // Validate new path doesn't contain invalid characters
+  if (normalizedNewPath.includes("..") || normalizedNewPath.includes("//")) {
+    return c.text("Invalid path", 400);
+  }
+
+  try {
+    if (isDirectory) {
+      // For directories, we need to move all objects with the prefix
+      const oldPrefix = `${normalizedOldPath}/`;
+      const newPrefix = `${normalizedNewPath}/`;
+
+      // Check if destination already exists
+      const checkDest = await bucketInfo.bucket.list({
+        prefix: newPrefix,
+        limit: 1,
+      });
+      if (
+        checkDest.objects.length > 0 ||
+        checkDest.delimitedPrefixes.length > 0
+      ) {
+        return c.text("Destination already exists", 409);
+      }
+
+      // List all objects with the old prefix
+      const listed = await bucketInfo.bucket.list({ prefix: oldPrefix });
+      const objects = listed.objects;
+
+      if (objects.length === 0) {
+        return c.text("Source directory not found or is empty", 404);
+      }
+
+      // Copy each object to the new location and delete the old one
+      for (const obj of objects) {
+        const newKey = obj.key.replace(oldPrefix, newPrefix);
+        const source = await bucketInfo.bucket.get(obj.key);
+        if (source) {
+          await bucketInfo.bucket.put(newKey, source.body, {
+            httpMetadata: source.httpMetadata,
+            customMetadata: source.customMetadata,
+          });
+          await bucketInfo.bucket.delete(obj.key);
+        }
+      }
+    } else {
+      // For files, copy to new key and delete old
+      const oldKey = normalizedOldPath;
+      const newKey = normalizedNewPath;
+
+      // Check if destination already exists
+      const checkDest = await bucketInfo.bucket.head(newKey);
+      if (checkDest) {
+        return c.text("Destination already exists", 409);
+      }
+
+      const source = await bucketInfo.bucket.get(oldKey);
+      if (!source) {
+        return c.text(`File "${oldKey}" not found`, 404);
+      }
+
+      await bucketInfo.bucket.put(newKey, source.body, {
+        httpMetadata: source.httpMetadata,
+        customMetadata: source.customMetadata,
+      });
+      await bucketInfo.bucket.delete(oldKey);
+    }
+
+    // Redirect to the new details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${normalizedNewPath}${isDirectory ? "/" : ""}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to move/rename: ${String(error)}`, 500);
+  }
+}
+
+async function handleDelete(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData
+) {
+  const parentPath = formData.get("parentPath") as string;
+  const name = formData.get("name") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+
+  if (!name) {
+    return c.text("Name is required", 400);
+  }
+
+  try {
+    if (isDirectory) {
+      // For directories, delete all objects with the prefix
+      const prefix = parentPath ? `${parentPath}${name}/` : `${name}/`;
+
+      // List all objects with the prefix
+      const listed = await bucketInfo.bucket.list({ prefix });
+      const objects = listed.objects;
+
+      // Delete each object
+      for (const obj of objects) {
+        await bucketInfo.bucket.delete(obj.key);
+      }
+    } else {
+      // For files, just delete the single object
+      const key = parentPath ? `${parentPath}${name}` : name;
+      await bucketInfo.bucket.delete(key);
+    }
+
+    // Redirect back to the parent directory
+    const redirectPath = parentPath
+      ? `/b/${bucketInfo.binding}/${parentPath}`
+      : `/b/${bucketInfo.binding}/`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to delete: ${String(error)}`, 500);
+  }
+}
+
+async function handleAddMetadata(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+  const key = formData.get("metadataKey") as string;
+  const value = formData.get("metadataValue") as string;
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Metadata can only be updated for files, not directories
+  if (isDirectory) {
+    return c.text("Cannot update metadata for directories", 400);
+  }
+
+  try {
+    // Get the current object
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Get existing metadata and add the new entry
+    // Allow empty/null keys and values
+    const existingMetadata = object.customMetadata || {};
+    const newMetadata = {
+      ...existingMetadata,
+      [key ?? ""]: value ?? "",
+    };
+
+    // Update the object with new metadata
+    await bucketInfo.bucket.put(fullPath, object.body, {
+      httpMetadata: object.httpMetadata,
+      customMetadata: newMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to add metadata: ${String(error)}`, 500);
+  }
+}
+
+async function handleUpdateMetadata(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Metadata can only be updated for files, not directories
+  if (isDirectory) {
+    return c.text("Cannot update metadata for directories", 400);
+  }
+
+  try {
+    // Parse all metadata entries from form data
+    const metadataEntries: Array<{
+      key: string;
+      value: string;
+      delete: boolean;
+    }> = [];
+    let index = 0;
+
+    while (true) {
+      const key = formData.get(`metadataKey_${index}`) as string | null;
+      const value = formData.get(`metadataValue_${index}`) as string | null;
+      const deleteFlag = formData.get(`metadataDelete_${index}`) === "true";
+
+      if (key === null && value === null) {
+        break; // No more entries
+      }
+
+      // Allow empty/null keys and values, don't trim
+      metadataEntries.push({
+        key: key ?? "",
+        value: value ?? "",
+        delete: deleteFlag,
+      });
+
+      index++;
+    }
+
+    // Build the new metadata object, filtering out only deleted entries
+    // Allow empty keys and values
+    const newMetadata: Record<string, string> = {};
+    for (const entry of metadataEntries) {
+      if (!entry.delete) {
+        newMetadata[entry.key] = entry.value;
+      }
+    }
+
+    // Get the current object
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Update the object with new metadata
+    await bucketInfo.bucket.put(fullPath, object.body, {
+      httpMetadata: object.httpMetadata,
+      customMetadata: newMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to update metadata: ${String(error)}`, 500);
+  }
+}
+
+async function handleAddHttpMetadata(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+  const key = formData.get("httpMetadataKey") as string;
+  const value = formData.get("httpMetadataValue") as string;
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Metadata can only be updated for files, not directories
+  if (isDirectory) {
+    return c.text("Cannot update metadata for directories", 400);
+  }
+
+  // Validate key is one of the allowed httpMetadata fields
+  const allowedKeys = [
+    "contentType",
+    "contentLanguage",
+    "contentDisposition",
+    "contentEncoding",
+    "cacheControl",
+    "cacheExpiry",
+  ];
+  if (!key || !allowedKeys.includes(key)) {
+    return c.text("Invalid httpMetadata key", 400);
+  }
+
+  try {
+    // Get the current object
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Get existing httpMetadata and add/update the new entry
+    const existingHttpMetadata = object.httpMetadata || {};
+    const newHttpMetadata: typeof existingHttpMetadata = {
+      ...existingHttpMetadata,
+    };
+
+    // Handle cacheExpiry specially (it's a Date)
+    if (key === "cacheExpiry") {
+      if (value) {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+          return c.text("Invalid date format for cacheExpiry", 400);
+        }
+        newHttpMetadata.cacheExpiry = date;
+      } else {
+        // Remove cacheExpiry if empty
+        delete newHttpMetadata.cacheExpiry;
+      }
+    } else {
+      // For other fields, set as string or remove if empty
+      if (value) {
+        (newHttpMetadata as any)[key] = value;
+      } else {
+        delete (newHttpMetadata as any)[key];
+      }
+    }
+
+    // Update the object with new metadata
+    await bucketInfo.bucket.put(fullPath, object.body, {
+      httpMetadata: newHttpMetadata,
+      customMetadata: object.customMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to add httpMetadata: ${String(error)}`, 500);
+  }
+}
+
+async function handleUpdateHttpMetadata(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const isDirectory = formData.get("isDirectory") === "true";
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Metadata can only be updated for files, not directories
+  if (isDirectory) {
+    return c.text("Cannot update metadata for directories", 400);
+  }
+
+  try {
+    // Parse all httpMetadata entries from form data
+    const metadataEntries: Array<{
+      key: string;
+      value: string;
+      delete: boolean;
+    }> = [];
+    let index = 0;
+
+    const allowedKeys = [
+      "contentType",
+      "contentLanguage",
+      "contentDisposition",
+      "contentEncoding",
+      "cacheControl",
+      "cacheExpiry",
+    ];
+
+    while (true) {
+      const key = formData.get(`httpMetadataKey_${index}`) as string | null;
+      const value = formData.get(`httpMetadataValue_${index}`) as string | null;
+      const deleteFlag = formData.get(`httpMetadataDelete_${index}`) === "true";
+
+      if (key === null && value === null) {
+        break; // No more entries
+      }
+
+      // Validate key is allowed
+      if (key && !allowedKeys.includes(key)) {
+        return c.text(`Invalid httpMetadata key: ${key}`, 400);
+      }
+
+      metadataEntries.push({
+        key: key ?? "",
+        value: value ?? "",
+        delete: deleteFlag,
+      });
+
+      index++;
+    }
+
+    // Get the current object
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Build the new httpMetadata object
+    const existingHttpMetadata = object.httpMetadata || {};
+    const newHttpMetadata: typeof existingHttpMetadata = {
+      ...existingHttpMetadata,
+    };
+
+    for (const entry of metadataEntries) {
+      if (entry.delete) {
+        // Remove the field
+        delete (newHttpMetadata as any)[entry.key];
+      } else if (entry.key) {
+        // Handle cacheExpiry specially (it's a Date)
+        if (entry.key === "cacheExpiry") {
+          if (entry.value) {
+            const date = new Date(entry.value);
+            if (isNaN(date.getTime())) {
+              return c.text("Invalid date format for cacheExpiry", 400);
+            }
+            newHttpMetadata.cacheExpiry = date;
+          } else {
+            delete newHttpMetadata.cacheExpiry;
+          }
+        } else {
+          // For other fields, set as string or remove if empty
+          if (entry.value) {
+            (newHttpMetadata as any)[entry.key] = entry.value;
+          } else {
+            delete (newHttpMetadata as any)[entry.key];
+          }
+        }
+      }
+    }
+
+    // Update the object with new metadata
+    await bucketInfo.bucket.put(fullPath, object.body, {
+      httpMetadata: newHttpMetadata,
+      customMetadata: object.customMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to update httpMetadata: ${String(error)}`, 500);
+  }
+}
+
+async function handleEdit(
+  c: Context,
+  bucketInfo: BucketInfo,
+  formData: FormData
+) {
+  const fullPath = formData.get("fullPath") as string;
+  const content = formData.get("content") as string;
+
+  if (!fullPath) {
+    return c.text("File path is required", 400);
+  }
+
+  // Enforce 1MB limit
+  const contentSize = new TextEncoder().encode(content).length;
+  if (contentSize > MAX_TEXT_PREVIEW_SIZE) {
+    return c.text("File content exceeds 1MB limit", 400);
+  }
+
+  try {
+    // Get the current object to preserve metadata
+    const object = await bucketInfo.bucket.get(fullPath);
+    if (!object) {
+      return c.text("File not found", 404);
+    }
+
+    // Update the object with new content while preserving metadata
+    await bucketInfo.bucket.put(fullPath, content, {
+      httpMetadata: object.httpMetadata,
+      customMetadata: object.customMetadata,
+    });
+
+    // Redirect back to the details page
+    const redirectPath = `/b/${bucketInfo.binding}/details/${fullPath}`;
+    return c.redirect(redirectPath, 303);
+  } catch (error) {
+    return c.text(`Failed to edit file: ${String(error)}`, 500);
+  }
+}

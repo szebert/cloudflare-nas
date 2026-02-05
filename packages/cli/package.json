@@ -1,0 +1,46 @@
+{
+  "name": "cloudflare-nas",
+  "version": "1.0.0",
+  "description": "CLI to deploy your personal cloud storage on Cloudflare",
+  "type": "module",
+  "bin": {
+    "cloudflare-nas": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "copy-templates": "tsx scripts/copy-templates.ts",
+    "dev": "pnpm run copy-templates && tsx src/index.ts",
+    "prepublishOnly": "pnpm run copy-templates && pnpm run build"
+  },
+  "dependencies": {
+    "execa": "^9.6.1",
+    "ora": "^9.1.0",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2",
+    "wrangler": "^4.61.1"
+  },
+  "devDependencies": {
+    "@types/prompts": "^2.4.9"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "cloudflare",
+    "nas",
+    "r2",
+    "d1",
+    "storage",
+    "file-manager",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/szebert/cloudflare-nas"
+  },
+  "license": "MIT"
+}
